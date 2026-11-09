@@ -84,7 +84,7 @@ function getRepoName() {
         return `${pkg.build.publish.owner}/${pkg.build.publish.repo}`;
       }
     }
-  } catch (e) {}
+  } catch (e) { }
   return 'satadru-bh/aura-editor';
 }
 
@@ -307,7 +307,7 @@ function downloadFile(url, destPath, onProgress) {
             file.close(() => resolve(destPath));
           });
           file.on('error', (err) => {
-            try { fs.unlinkSync(destPath); } catch (e) {}
+            try { fs.unlinkSync(destPath); } catch (e) { }
             reject(err);
           });
         }
@@ -315,14 +315,14 @@ function downloadFile(url, destPath, onProgress) {
 
       req.on('error', (err) => {
         file.close();
-        try { fs.unlinkSync(destPath); } catch (e) {}
+        try { fs.unlinkSync(destPath); } catch (e) { }
         reject(err);
       });
 
       req.on('timeout', () => {
         req.destroy();
         file.close();
-        try { fs.unlinkSync(destPath); } catch (e) {}
+        try { fs.unlinkSync(destPath); } catch (e) { }
         reject(new Error('Download timed out'));
       });
     }
@@ -367,7 +367,7 @@ async function normalizeExtractedFolder(targetDir) {
           const to = path.join(targetDir, f);
           await rawFsPromises.rename(from, to);
         }
-        try { await rawFsPromises.rmdir(subDir); } catch (e) {}
+        try { await rawFsPromises.rmdir(subDir); } catch (e) { }
         return targetDir;
       }
     }
@@ -407,7 +407,7 @@ function createShortcut(shortcutPath, targetPath, iconLocation, description) {
 
     fs.writeFile(vbsPath, vbsContent, () => {
       exec(`cscript //nologo "${vbsPath}"`, () => {
-        try { fs.unlinkSync(vbsPath); } catch (e) {}
+        try { fs.unlinkSync(vbsPath); } catch (e) { }
         resolve();
       });
     });
@@ -505,7 +505,7 @@ ipcMain.handle('installer:startInstall', async (event, options) => {
 
       try {
         fs.unlinkSync(tempZipPath);
-      } catch (e) {}
+      } catch (e) { }
 
       await normalizeExtractedFolder(targetDir);
     }
@@ -608,8 +608,8 @@ exit
       mode === 'update'
         ? 'Update complete!'
         : mode === 'repair'
-        ? 'Repair complete!'
-        : 'Installation complete!';
+          ? 'Repair complete!'
+          : 'Installation complete!';
 
     sendProgress(100, doneMessage, 'Ready to launch.');
     return { success: true, targetDir, exePath, mode };
@@ -646,7 +646,7 @@ ipcMain.handle('installer:uninstall', async (_event, targetDir) => {
     for (const sc of shortcuts) {
       try {
         if (fs.existsSync(sc)) fs.unlinkSync(sc);
-      } catch (e) {}
+      } catch (e) { }
     }
 
     sendProgress(60, 'Cleaning Windows registry entries...', 'Removing file associations and uninstaller...');
