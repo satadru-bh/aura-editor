@@ -353,7 +353,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       {
         id: 'toggle-hemingway-mode',
         title: 'Toggle Hemingway Mode (Forward-Only Drafting Lock)',
-        category: 'Writing Flow',
+        category: 'View',
         shortcut: 'Ctrl+Shift+H',
         icon: <Sparkles className="w-4 h-4 text-rose-500" />,
         action: onToggleHemingwayMode || (() => {}),

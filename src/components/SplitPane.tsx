@@ -37,6 +37,7 @@ interface SplitPaneProps {
   onToggleFocus: () => void;
   onDropImage: (name: string, dataUrl: string) => void;
   onDropFiles?: (files: FileList) => void;
+  onOpenWikiLink?: (target: string) => void;
 }
 
 export const SplitPane: React.FC<SplitPaneProps> = ({
@@ -64,6 +65,7 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
   onToggleFocus,
   onDropImage,
   onDropFiles,
+  onOpenWikiLink,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -201,6 +203,7 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
             onToggleFocus={onToggleFocus}
             onDropImage={onDropImage}
             onDropFiles={onDropFiles}
+            onOpenWikiLink={onOpenWikiLink}
           />
         </div>
       </div>
@@ -344,6 +347,7 @@ export const SplitPane: React.FC<SplitPaneProps> = ({
             onToggleFocus={onToggleFocus}
             onDropImage={onDropImage}
             onDropFiles={onDropFiles}
+            onOpenWikiLink={onOpenWikiLink}
           />
         </div>
       </div>

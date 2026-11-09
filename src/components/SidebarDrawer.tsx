@@ -21,14 +21,17 @@ import {
   Square,
   Check,
   Download,
+  Link2,
+  ArrowUpRight,
 } from 'lucide-react';
 import { FileItem, OutlineItem } from '../types';
 import { WorkspaceNode } from '../services/WorkspaceService';
+import { findWikiLinks } from '../editor/WikiLinkPlugin';
 
 interface SidebarDrawerProps {
   isOpen: boolean;
-  activeTab: 'files' | 'vault' | 'outline';
-  onTabChange: (tab: 'files' | 'vault' | 'outline') => void;
+  activeTab: 'files' | 'vault' | 'outline' | 'links';
+  onTabChange: (tab: 'files' | 'vault' | 'outline' | 'links') => void;
   files: FileItem[];
   activeFileId: string | null;
   activeFilePath?: string | null;
@@ -41,6 +44,7 @@ interface SidebarDrawerProps {
   onRefreshWorkspace?: () => void;
   onCloseWorkspace?: () => void;
   onOpenFileByPath?: (filePath: string) => void;
+  onOpenWikiLink?: (target: string) => void;
   onSelectFile: (file: FileItem) => void;
   onNewFile: () => void;
   onOpenFileFromDisk: () => void;
@@ -129,6 +133,7 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   onRefreshWorkspace,
   onCloseWorkspace,
   onOpenFileByPath,
+  onOpenWikiLink,
   onSelectFile,
   onNewFile,
   onOpenFileFromDisk,
@@ -336,6 +341,21 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
             >
               <ListTree className="w-3 h-3" />
               <span>Outline</span>
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTabChange('links');
+              }}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium transition-all active:scale-95 cursor-pointer ${
+                activeTab === 'links'
+                  ? 'bg-[var(--surface-color)] text-[var(--text-color)] shadow-xs border border-[var(--border-color)]'
+                  : 'text-[var(--muted-color)] hover:text-[var(--text-color)]'
+              }`}
+            >
+              <Link2 className="w-3 h-3" />
+              <span>Links</span>
             </button>
           </div>
 
@@ -799,6 +819,97 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
                 })
               )}
             </div>
+          </div>
+        )}
+
+        {activeTab === 'links' && (
+          <div className="flex-1 flex flex-col overflow-hidden p-2.5">
+            {(() => {
+              const activeDoc = files.find((f) => f.id === activeFileId);
+              const activeTitle = activeDoc ? activeDoc.name.replace(/\.(md|txt)$/i, '') : 'Untitled';
+
+              const incoming = files.filter(
+                (f) =>
+                  f.id !== activeFileId &&
+                  activeTitle &&
+                  (f.content.toLowerCase().includes(`[[${activeTitle.toLowerCase()}]]`) ||
+                    f.content.toLowerCase().includes(`[[${activeTitle.toLowerCase()}|`))
+              );
+
+              const outgoing = activeDoc ? findWikiLinks(activeDoc.content) : [];
+
+              return (
+                <div className="flex-1 flex flex-col overflow-hidden space-y-4">
+                  <div className="flex flex-col overflow-hidden">
+                    <div className="text-[11px] font-semibold text-[var(--muted-color)] px-2 py-1.5 border-b border-[var(--border-color)] flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Link2 className="w-3 h-3 text-[var(--text-color)]" />
+                        <span>Incoming Backlinks</span>
+                      </span>
+                      <span className="font-mono text-[10px]">{incoming.length}</span>
+                    </div>
+
+                    <div className="overflow-y-auto max-h-48 py-1.5 space-y-1">
+                      {incoming.length === 0 ? (
+                        <div className="py-4 text-center text-[var(--muted-color)] text-[11px] px-2 italic">
+                          No other documents link to this note yet.
+                        </div>
+                      ) : (
+                        incoming.map((f) => (
+                          <button
+                            key={f.id}
+                            type="button"
+                            onClick={() => onSelectFile(f)}
+                            className="w-full text-left p-2 rounded-md hover:bg-[var(--hover-bg)] flex items-center justify-between gap-2 transition-colors cursor-pointer group"
+                          >
+                            <div className="flex items-center gap-1.5 truncate">
+                              <FileText className="w-3 h-3 text-[var(--muted-color)] group-hover:text-[var(--text-color)] shrink-0" />
+                              <span className="text-xs truncate font-medium">{f.name.replace(/\.(md|txt)$/i, '')}</span>
+                            </div>
+                            <ArrowUpRight className="w-3 h-3 text-[var(--muted-color)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 flex flex-col overflow-hidden">
+                    <div className="text-[11px] font-semibold text-[var(--muted-color)] px-2 py-1.5 border-b border-[var(--border-color)] flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <ArrowUpRight className="w-3 h-3 text-[var(--text-color)]" />
+                        <span>Outgoing References</span>
+                      </span>
+                      <span className="font-mono text-[10px]">{outgoing.length}</span>
+                    </div>
+
+                    <div className="overflow-y-auto flex-1 py-1.5 space-y-1">
+                      {outgoing.length === 0 ? (
+                        <div className="py-4 text-center text-[var(--muted-color)] text-[11px] px-2 italic">
+                          No [[Note]] links in this document.<br />
+                          <span className="font-mono text-[10px] opacity-75 mt-1 inline-block">
+                            Type [[ to link other notes.
+                          </span>
+                        </div>
+                      ) : (
+                        outgoing.map((link, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => onOpenWikiLink?.(link.target)}
+                            className="w-full text-left p-2 rounded-md hover:bg-[var(--hover-bg)] flex items-center justify-between gap-2 transition-colors cursor-pointer group"
+                          >
+                            <span className="text-xs truncate font-mono text-[var(--muted-color)] group-hover:text-[var(--text-color)]">
+                              [[{link.target}]]
+                            </span>
+                            <ArrowUpRight className="w-3 h-3 text-[var(--muted-color)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>

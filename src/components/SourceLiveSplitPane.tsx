@@ -30,6 +30,7 @@ interface SourceLiveSplitPaneProps {
   onToggleFocus: () => void;
   onDropImage: (name: string, dataUrl?: string) => void;
   onDropFiles?: (files: FileList | File[]) => void;
+  onOpenWikiLink?: (target: string) => void;
 }
 
 export const SourceLiveSplitPane: React.FC<SourceLiveSplitPaneProps> = ({
@@ -51,6 +52,7 @@ export const SourceLiveSplitPane: React.FC<SourceLiveSplitPaneProps> = ({
   onToggleFocus,
   onDropImage,
   onDropFiles,
+  onOpenWikiLink,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [ratio, setRatio] = useState<number>(50);
@@ -236,6 +238,7 @@ export const SourceLiveSplitPane: React.FC<SourceLiveSplitPaneProps> = ({
             onToggleFocus={onToggleFocus}
             onDropImage={onDropImage}
             onDropFiles={onDropFiles}
+            onOpenWikiLink={onOpenWikiLink}
           />
         </div>
       </div>
@@ -312,6 +315,7 @@ export const SourceLiveSplitPane: React.FC<SourceLiveSplitPaneProps> = ({
             onToggleFocus={onToggleFocus}
             onDropImage={onDropImage}
             onDropFiles={onDropFiles}
+            onOpenWikiLink={onOpenWikiLink}
           />
         </div>
       </div>

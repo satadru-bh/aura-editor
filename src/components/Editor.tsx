@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useEffect, useRef, useImperativeHandle, forwardRef, useState } from 'react';
 import { EditorState, Extension, StateEffect } from '@codemirror/state';
 import { EditorView, drawSelection, dropCursor, keymap } from '@codemirror/view';
 import { defaultKeymap, history, historyKeymap, indentWithTab } from '@codemirror/commands';
@@ -18,6 +18,8 @@ import { createTablePlugin } from '../editor/TablePlugin';
 import { createFocusModePlugin } from '../editor/FocusPlugin';
 import { createBionicReadingPlugin } from '../editor/BionicReadingPlugin';
 import { createHemingwayPlugin } from '../editor/HemingwayPlugin';
+import { createWikiLinkPlugin, createWikiLinkAutocompletion } from '../editor/WikiLinkPlugin';
+import { WikiLinkPreviewPopover, WikiLinkPreviewData } from './WikiLinkPreviewPopover';
 import { AudioService } from '../services/AudioService';
 import { assetManager } from '../services/AssetManagerService';
 import { workspaceService } from '../services/WorkspaceService';
@@ -49,6 +51,7 @@ interface EditorProps {
   onToggleFocus: () => void;
   onDropImage?: (name: string, dataUrl: string) => void;
   onDropFiles?: (files: FileList) => void;
+  onOpenWikiLink?: (target: string) => void;
 }
 
 export const Editor = forwardRef<EditorHandle, EditorProps>(
@@ -70,6 +73,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
       onToggleFocus,
       onDropImage,
       onDropFiles,
+      onOpenWikiLink,
     },
     ref
   ) => {
@@ -81,6 +85,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
     const filesRef = useRef(files);
     filesRef.current = files;
     const scrollAnimRef = useRef<number | null>(null);
+    const [previewData, setPreviewData] = useState<WikiLinkPreviewData | null>(null);
+    const previewTimeoutRef = useRef<number | null>(null);
 
     useEffect(() => {
       const cur = files.find((f) => f.id === fileId);
@@ -92,6 +98,10 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
         if (scrollAnimRef.current !== null) {
           cancelAnimationFrame(scrollAnimRef.current);
           scrollAnimRef.current = null;
+        }
+        if (previewTimeoutRef.current !== null) {
+          clearTimeout(previewTimeoutRef.current);
+          previewTimeoutRef.current = null;
         }
       };
     }, []);
@@ -240,6 +250,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
         createFocusModePlugin(settings.focusMode),
         createBionicReadingPlugin(!!settings.bionicReading),
         createHemingwayPlugin(!!settings.hemingwayMode),
+        createWikiLinkPlugin(onOpenWikiLink),
+        createWikiLinkAutocompletion(() => filesRef.current),
         createWordTriggerPlugin(() => settings.wordTriggers || []),
         createTablePlugin(),
         createSyntaxHighlighting(settings.theme),
@@ -268,6 +280,42 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
           ...searchKeymap,
         ]),
         EditorView.domEventHandlers({
+          mouseover: (e) => {
+            const el = (e.target as HTMLElement).closest('[data-wikilink-target]');
+            if (el) {
+              const targetName = el.getAttribute('data-wikilink-target') || '';
+              const labelName = el.getAttribute('data-wikilink-label') || targetName;
+              const rect = el.getBoundingClientRect();
+
+              if (previewTimeoutRef.current) clearTimeout(previewTimeoutRef.current);
+              previewTimeoutRef.current = window.setTimeout(() => {
+                const clean = targetName.toLowerCase();
+                const match = filesRef.current.find(
+                  (f) => f.name.replace(/\.(md|txt)$/i, '').toLowerCase() === clean
+                );
+                const previewContent = match ? match.content.slice(0, 320).trim() : undefined;
+                setPreviewData({
+                  target: targetName,
+                  label: labelName,
+                  x: rect.left,
+                  y: rect.bottom,
+                  previewContent,
+                  filePath: match?.path,
+                  exists: !!match,
+                });
+              }, 180);
+            }
+          },
+          mouseout: (e) => {
+            const related = e.relatedTarget as HTMLElement;
+            if (!related || !related.closest('[data-wikilink-target]')) {
+              if (previewTimeoutRef.current) {
+                clearTimeout(previewTimeoutRef.current);
+                previewTimeoutRef.current = null;
+              }
+              setPreviewData(null);
+            }
+          },
           keydown: (e) => {
             if (settings.audio?.keystrokeEnabled && settings.audio?.keystrokeSound !== 'none') {
               if (!['Shift', 'Control', 'Alt', 'Meta', 'CapsLock'].includes(e.key)) {
@@ -431,6 +479,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
           ref={editorContainerRef}
           className={`w-full h-full flex-1 overflow-hidden select-text flex flex-col ${settings.focusMode ? 'cm-focus-mode' : ''}`}
         />
+        <WikiLinkPreviewPopover data={previewData} />
       </div>
     );
   }

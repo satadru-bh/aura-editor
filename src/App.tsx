@@ -116,7 +116,7 @@ export const App: React.FC = () => {
   const [isFindOpen, setIsFindOpen] = useState(false);
   const [isReplaceMode, setIsReplaceMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [sidebarTab, setSidebarTab] = useState<'files' | 'vault' | 'outline'>('files');
+  const [sidebarTab, setSidebarTab] = useState<'files' | 'vault' | 'outline' | 'links'>('files');
   const [workspaceState, setWorkspaceState] = useState<WorkspaceState>(() => workspaceService.getState());
   const [isImportExportOpen, setIsImportExportOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -875,6 +875,59 @@ export const App: React.FC = () => {
       }).catch(() => {});
     }
   };
+
+  const handleOpenWikiLink = useCallback(
+    (target: string) => {
+      if (!target) return;
+      const cleanTarget = target.trim().toLowerCase();
+
+      // 1. Check open files
+      const match = files.find(
+        (f) => f.name.replace(/\.(md|txt)$/i, '').toLowerCase() === cleanTarget
+      );
+      if (match) {
+        handleSelectFile(match);
+        return;
+      }
+
+      // 2. Check workspace files
+      if (workspaceState.folderPath && workspaceState.tree) {
+        const findInTree = (nodes: any[]): string | null => {
+          for (const n of nodes) {
+            if (!n.isDirectory && n.name.replace(/\.(md|txt)$/i, '').toLowerCase() === cleanTarget) {
+              return n.path;
+            }
+            if (n.children) {
+              const res = findInTree(n.children);
+              if (res) return res;
+            }
+          }
+          return null;
+        };
+
+        const foundPath = findInTree(workspaceState.tree);
+        if (foundPath) {
+          handleOpenFileByPath(foundPath);
+          return;
+        }
+      }
+
+      // 3. Create new note with that title
+      const newFileName = target.endsWith('.md') ? target : `${target}.md`;
+      const newFile: FileItem = {
+        id: `file_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+        name: newFileName,
+        content: `# ${target.replace(/\.(md|txt)$/i, '')}\n\n`,
+        lastModified: Date.now(),
+        createdAt: Date.now(),
+      };
+      setFiles((prev) => [newFile, ...prev]);
+      setActiveFileId(newFile.id);
+      setContent(newFile.content);
+      showToast(`Created note: ${newFileName}`, 'success');
+    },
+    [files, workspaceState, handleSelectFile, handleOpenFileByPath, showToast]
+  );
 
   const handleCloseTabDirect = (fileId: string) => {
     const remaining = openTabIds.filter((id) => id !== fileId);
@@ -1942,6 +1995,7 @@ export const App: React.FC = () => {
           onRefreshWorkspace={() => workspaceService.refreshTree()}
           onCloseWorkspace={() => workspaceService.clearWorkspace()}
           onOpenFileByPath={handleOpenFileByPath}
+          onOpenWikiLink={handleOpenWikiLink}
           onSelectFile={handleSelectFile}
           onNewFile={handleNewFile}
           onOpenFileFromDisk={handleOpenFileFromDisk}
@@ -2041,6 +2095,7 @@ export const App: React.FC = () => {
               onToggleFocus={() => setSettings((s) => ({ ...s, focusMode: !s.focusMode }))}
               onDropImage={(name) => showToast(`Image inserted: ${name}`, 'info')}
               onDropFiles={handleImportFiles}
+              onOpenWikiLink={handleOpenWikiLink}
             />
           ) : settings.editorMode === 'split' ? (
             <SourceLiveSplitPane
@@ -2068,6 +2123,7 @@ export const App: React.FC = () => {
               onToggleFocus={() => setSettings((s) => ({ ...s, focusMode: !s.focusMode }))}
               onDropImage={(name) => showToast(`Image inserted: ${name}`, 'info')}
               onDropFiles={handleImportFiles}
+              onOpenWikiLink={handleOpenWikiLink}
             />
           ) : (
             <Editor
@@ -2094,6 +2150,7 @@ export const App: React.FC = () => {
               onToggleFocus={() => setSettings((s) => ({ ...s, focusMode: !s.focusMode }))}
               onDropImage={(name) => showToast(`Image inserted: ${name}`, 'info')}
               onDropFiles={handleImportFiles}
+              onOpenWikiLink={handleOpenWikiLink}
             />
           )}
 
