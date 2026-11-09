@@ -38,10 +38,10 @@ jobs:
         run: npm run generate:installer-assets
 
       - name: Build Application Zip Package
-        run: npx electron-builder --win zip
+        run: npx electron-builder --win zip --publish never
 
       - name: Build Standalone Custom Installer
-        run: npx electron-builder --project custom-installer
+        run: npx electron-builder --project custom-installer --publish never
 
       - name: Upload Release Assets to GitHub Release
         uses: softprops/action-gh-release@v2
