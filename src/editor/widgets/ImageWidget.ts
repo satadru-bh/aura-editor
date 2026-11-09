@@ -1,4 +1,5 @@
 import { WidgetType, EditorView } from '@codemirror/view';
+import { assetManager } from '../../services/AssetManagerService';
 
 export class ImageWidget extends WidgetType {
   constructor(
@@ -21,6 +22,15 @@ export class ImageWidget extends WidgetType {
       img.src = this.src;
       img.className = 'inline-block align-middle mr-1.5 my-1 max-h-6 rounded select-none';
       img.loading = 'lazy';
+
+      if (!this.src.startsWith('http://') && !this.src.startsWith('https://') && !this.src.startsWith('data:') && !this.src.startsWith('blob:') && !this.src.startsWith('file:///')) {
+        assetManager.resolveImageSrc(this.src).then((resolved) => {
+          if (resolved && resolved !== this.src) {
+            img.src = resolved;
+          }
+        });
+      }
+
       return img;
     }
 
@@ -35,6 +45,14 @@ export class ImageWidget extends WidgetType {
     img.src = this.src;
     img.className = 'block max-h-96 max-w-full object-contain rounded transition-opacity duration-200';
     img.loading = 'lazy';
+
+    if (!this.src.startsWith('http://') && !this.src.startsWith('https://') && !this.src.startsWith('data:') && !this.src.startsWith('blob:') && !this.src.startsWith('file:///')) {
+      assetManager.resolveImageSrc(this.src).then((resolved) => {
+        if (resolved && resolved !== this.src) {
+          img.src = resolved;
+        }
+      });
+    }
 
     imgContainer.appendChild(img);
     wrap.appendChild(imgContainer);

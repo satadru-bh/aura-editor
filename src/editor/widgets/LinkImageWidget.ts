@@ -1,4 +1,5 @@
 import { WidgetType, EditorView } from '@codemirror/view';
+import { assetManager } from '../../services/AssetManagerService';
 
 export class LinkImageWidget extends WidgetType {
   constructor(
@@ -25,6 +26,14 @@ export class LinkImageWidget extends WidgetType {
     img.src = this.src;
     img.className = 'inline-block max-h-6 rounded object-contain shadow-xs';
     img.loading = 'lazy';
+
+    if (!this.src.startsWith('http://') && !this.src.startsWith('https://') && !this.src.startsWith('data:') && !this.src.startsWith('blob:') && !this.src.startsWith('file:///')) {
+      assetManager.resolveImageSrc(this.src).then((resolved) => {
+        if (resolved && resolved !== this.src) {
+          img.src = resolved;
+        }
+      });
+    }
 
     img.onerror = () => {
       a.textContent = `[${this.alt || 'Badge'}]`;

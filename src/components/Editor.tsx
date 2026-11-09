@@ -16,6 +16,8 @@ import { createEditorKeybindings } from '../editor/Keymaps';
 import { createWordTriggerPlugin } from '../editor/WordTriggerPlugin';
 import { createFocusModePlugin } from '../editor/FocusPlugin';
 import { AudioService } from '../services/AudioService';
+import { assetManager } from '../services/AssetManagerService';
+import { workspaceService } from '../services/WorkspaceService';
 import { EditorSettings, FileItem } from '../types';
 
 export interface EditorHandle {
@@ -72,9 +74,15 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
     const editorViewRef = useRef<EditorView | null>(null);
     const isProgrammaticChangeRef = useRef(false);
     const currentFileIdRef = useRef<string | undefined>(fileId);
+    currentFileIdRef.current = fileId;
     const filesRef = useRef(files);
     filesRef.current = files;
     const scrollAnimRef = useRef<number | null>(null);
+
+    useEffect(() => {
+      const cur = files.find((f) => f.id === fileId);
+      assetManager.setCurrentNotePath(cur?.path || null);
+    }, [fileId, files]);
 
     useEffect(() => {
       return () => {
@@ -262,6 +270,33 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
             }
             return false;
           },
+          paste: (e, view) => {
+            if (e.clipboardData?.items) {
+              for (const item of Array.from(e.clipboardData.items)) {
+                if (item.type.startsWith('image/')) {
+                  const file = item.getAsFile();
+                  if (file) {
+                    e.preventDefault();
+                    const cur = filesRef.current.find((f) => f.id === currentFileIdRef.current);
+                    const notePath = cur?.path || null;
+                    const wsPath = workspaceService.getState().folderPath;
+                    assetManager.saveImage(file, notePath, wsPath).then((res) => {
+                      if (res.success && res.markdownLink) {
+                        const pos = view.state.selection.main.head;
+                        view.dispatch({
+                          changes: { from: pos, to: pos, insert: res.markdownLink },
+                          selection: { anchor: pos + res.markdownLink.length },
+                        });
+                        onDropImage?.(res.fileName, res.relativePath);
+                      }
+                    });
+                    return true;
+                  }
+                }
+              }
+            }
+            return false;
+          },
           dragover: (e) => {
             if (e.dataTransfer?.types.includes('application/x-aura-tab-id')) {
               e.preventDefault();
@@ -280,17 +315,20 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
               const file = e.dataTransfer.files[0];
               if (file.type.startsWith('image/')) {
                 e.preventDefault();
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                  const dataUrl = event.target?.result as string;
-                  const pos = view.posAtCoords({ x: e.clientX, y: e.clientY }) || view.state.selection.main.head;
-                  const imageMarkdown = `\n![${file.name}](${dataUrl})\n`;
-                  view.dispatch({
-                    changes: { from: pos, to: pos, insert: imageMarkdown },
-                  });
-                  onDropImage?.(file.name, dataUrl);
-                };
-                reader.readAsDataURL(file);
+                const pos = view.posAtCoords({ x: e.clientX, y: e.clientY }) || view.state.selection.main.head;
+                const cur = filesRef.current.find((f) => f.id === currentFileIdRef.current);
+                const notePath = cur?.path || null;
+                const wsPath = workspaceService.getState().folderPath;
+
+                assetManager.saveImage(file, notePath, wsPath).then((res) => {
+                  if (res.success && res.markdownLink) {
+                    view.dispatch({
+                      changes: { from: pos, to: pos, insert: res.markdownLink },
+                      selection: { anchor: pos + res.markdownLink.length },
+                    });
+                    onDropImage?.(res.fileName, res.relativePath);
+                  }
+                });
                 return true;
               } else {
                 // Document file dropped onto editor -> open as new document file

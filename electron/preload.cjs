@@ -54,4 +54,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('workspace:changed', handler);
     return () => ipcRenderer.removeListener('workspace:changed', handler);
   },
+  saveAssetImage: (options) => ipcRenderer.invoke('asset:saveImage', options),
+  resolveAssetPath: (notePath, relativeSrc, workspacePath) => ipcRenderer.invoke('asset:resolvePath', notePath, relativeSrc, workspacePath),
 });

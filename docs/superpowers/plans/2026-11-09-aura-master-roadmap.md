@@ -178,3 +178,4 @@
 - [ ] Step 6.3: Extract modal state and settings management out of `src/App.tsx` into `EditorSettingsContext` and `WorkspaceContext`.
 - [ ] Step 6.4: Run `npm.cmd run build` and verify main bundle size decreases dramatically.
 - [ ] Step 6.5: Run `npm.cmd test` to guarantee 100% test passing and zero regressions.
+

@@ -486,6 +486,104 @@ ipcMain.handle('workspace:unwatch', () => {
   return { success: true };
 });
 
+// Native Asset Vault (Image auto-save & path resolution)
+ipcMain.handle('asset:saveImage', async (_event, options) => {
+  try {
+    const { notePath, workspacePath, dataBuffer, dataUrl, fileName, mimeType = 'image/png' } = options;
+
+    let targetDir;
+    if (notePath && fsSync.existsSync(path.dirname(notePath))) {
+      targetDir = path.join(path.dirname(notePath), 'assets');
+    } else if (workspacePath && fsSync.existsSync(workspacePath)) {
+      targetDir = path.join(workspacePath, 'assets');
+    } else {
+      targetDir = path.join(app.getPath('userData'), 'assets');
+    }
+
+    await fs.mkdir(targetDir, { recursive: true });
+
+    let ext = '.png';
+    if (fileName && path.extname(fileName)) {
+      ext = path.extname(fileName);
+    } else if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
+      ext = '.jpg';
+    } else if (mimeType.includes('gif')) {
+      ext = '.gif';
+    } else if (mimeType.includes('svg')) {
+      ext = '.svg';
+    } else if (mimeType.includes('webp')) {
+      ext = '.webp';
+    }
+
+    const cleanBaseName = fileName
+      ? path.basename(fileName, ext).replace(/[^a-zA-Z0-9_\-\u00C0-\u024F]/g, '-').replace(/-+/g, '-')
+      : 'pasted-image';
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').slice(0, 19);
+    const finalName = `${cleanBaseName}-${timestamp}${ext}`;
+    const targetFile = path.join(targetDir, finalName);
+
+    let bufferToWrite;
+    if (dataBuffer) {
+      bufferToWrite = Buffer.from(dataBuffer);
+    } else if (dataUrl) {
+      const base64Data = dataUrl.replace(/^data:image\/\w+;base64,/, '');
+      bufferToWrite = Buffer.from(base64Data, 'base64');
+    } else {
+      return { success: false, error: 'No image data provided' };
+    }
+
+    await fs.writeFile(targetFile, bufferToWrite);
+
+    const relativePath = `./assets/${finalName}`;
+    return {
+      success: true,
+      fullPath: targetFile,
+      relativePath,
+      fileName: finalName,
+    };
+  } catch (err) {
+    console.error('asset:saveImage error:', err);
+    return { success: false, error: err.message };
+  }
+});
+
+ipcMain.handle('asset:resolvePath', (_event, notePath, relativeSrc, workspacePath) => {
+  try {
+    if (!relativeSrc) return null;
+    if (relativeSrc.startsWith('http://') || relativeSrc.startsWith('https://') || relativeSrc.startsWith('data:') || relativeSrc.startsWith('blob:') || relativeSrc.startsWith('file:///')) {
+      return relativeSrc;
+    }
+
+    let absolutePath = relativeSrc;
+    if (notePath && !path.isAbsolute(relativeSrc)) {
+      const candidate = path.resolve(path.dirname(notePath), relativeSrc);
+      if (fsSync.existsSync(candidate)) {
+        absolutePath = candidate;
+      } else if (workspacePath) {
+        const wsCandidate = path.resolve(workspacePath, relativeSrc);
+        if (fsSync.existsSync(wsCandidate)) {
+          absolutePath = wsCandidate;
+        } else {
+          absolutePath = candidate;
+        }
+      } else {
+        absolutePath = candidate;
+      }
+    } else if (workspacePath && !path.isAbsolute(relativeSrc)) {
+      absolutePath = path.resolve(workspacePath, relativeSrc);
+    }
+
+    if (fsSync.existsSync(absolutePath)) {
+      const normalized = absolutePath.replace(/\\/g, '/');
+      return `file:///${encodeURI(normalized)}`;
+    }
+    return relativeSrc;
+  } catch (e) {
+    return relativeSrc;
+  }
+});
+
 ipcMain.handle('app:getVersion', () => {
   return app.getVersion();
 });
