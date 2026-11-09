@@ -45,4 +45,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('file:external-change', handler);
     return () => ipcRenderer.removeListener('file:external-change', handler);
   },
+  openWorkspaceDialog: () => ipcRenderer.invoke('workspace:openFolderDialog'),
+  readWorkspaceTree: (folderPath) => ipcRenderer.invoke('workspace:readTree', folderPath),
+  watchWorkspace: (folderPath) => ipcRenderer.invoke('workspace:watch', folderPath),
+  unwatchWorkspace: () => ipcRenderer.invoke('workspace:unwatch'),
+  onWorkspaceChanged: (callback) => {
+    const handler = (_event, data) => callback(data);
+    ipcRenderer.on('workspace:changed', handler);
+    return () => ipcRenderer.removeListener('workspace:changed', handler);
+  },
 });

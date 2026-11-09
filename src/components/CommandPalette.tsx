@@ -61,6 +61,7 @@ interface CommandPaletteProps {
   onClose: () => void;
   onNewFile: () => void;
   onOpenFile: () => void;
+  onOpenWorkspace?: () => void;
   onSaveFile: () => void;
   onSaveFileAs: () => void;
   onToggleFocusMode: () => void;
@@ -115,6 +116,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onClose,
   onNewFile,
   onOpenFile,
+  onOpenWorkspace,
   onSaveFile,
   onSaveFileAs,
   onToggleFocusMode,
@@ -188,6 +190,15 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         icon: <FolderOpen className="w-4 h-4" />,
         action: onOpenFile,
         keywords: ['load', 'read', 'browse'],
+      },
+      {
+        id: 'open-workspace-vault',
+        title: 'Open Workspace Vault Folder...',
+        category: 'File',
+        shortcut: 'Ctrl+Shift+O',
+        icon: <FolderOpen className="w-4 h-4" />,
+        action: onOpenWorkspace || (() => {}),
+        keywords: ['folder', 'vault', 'workspace', 'directory', 'project'],
       },
       {
         id: 'save-file',

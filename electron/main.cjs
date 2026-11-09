@@ -379,6 +379,113 @@ ipcMain.handle('fs:unwatchFile', (_event, filePath) => {
   return { success: true };
 });
 
+// Workspace / Folder Vault Support
+let activeWorkspaceWatcher = null;
+let workspaceDebounceTimer = null;
+
+async function buildWorkspaceTree(dir, depth = 0) {
+  if (depth > 6) return [];
+  const entries = await fs.readdir(dir, { withFileTypes: true });
+  const result = [];
+  const ignored = new Set(['node_modules', '.git', '.vscode', '.idea', 'dist', 'dist-installer', 'installer-out', 'build']);
+
+  for (const entry of entries) {
+    if (ignored.has(entry.name) || entry.name.startsWith('.')) continue;
+    const fullPath = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      const children = await buildWorkspaceTree(fullPath, depth + 1);
+      result.push({
+        name: entry.name,
+        path: fullPath,
+        isDirectory: true,
+        children,
+      });
+    } else {
+      const ext = path.extname(entry.name).toLowerCase();
+      if (['.md', '.markdown', '.txt', '.text'].includes(ext)) {
+        result.push({
+          name: entry.name,
+          path: fullPath,
+          isDirectory: false,
+          extension: ext,
+        });
+      }
+    }
+  }
+
+  result.sort((a, b) => {
+    if (a.isDirectory === b.isDirectory) {
+      return a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' });
+    }
+    return a.isDirectory ? -1 : 1;
+  });
+
+  return result;
+}
+
+ipcMain.handle('workspace:openFolderDialog', async () => {
+  try {
+    const win = mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined;
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+      title: 'Open Workspace Folder',
+      properties: ['openDirectory', 'createDirectory'],
+    });
+
+    if (canceled || !filePaths || filePaths.length === 0) {
+      return { canceled: true };
+    }
+
+    const folderPath = filePaths[0];
+    const folderName = path.basename(folderPath);
+    return { canceled: false, folderPath, folderName };
+  } catch (err) {
+    console.error('workspace:openFolderDialog error:', err);
+    return { canceled: true, error: err.message };
+  }
+});
+
+ipcMain.handle('workspace:readTree', async (_event, folderPath) => {
+  try {
+    if (!folderPath || !fsSync.existsSync(folderPath)) {
+      return { success: false, error: 'Directory does not exist', tree: [] };
+    }
+    const tree = await buildWorkspaceTree(folderPath);
+    return { success: true, tree };
+  } catch (err) {
+    return { success: false, error: err.message, tree: [] };
+  }
+});
+
+ipcMain.handle('workspace:watch', (_event, folderPath) => {
+  if (!folderPath || !fsSync.existsSync(folderPath)) return { success: false };
+  if (activeWorkspaceWatcher) {
+    try { activeWorkspaceWatcher.close(); } catch (e) {}
+    activeWorkspaceWatcher = null;
+  }
+  try {
+    activeWorkspaceWatcher = fsSync.watch(folderPath, { recursive: true }, () => {
+      if (workspaceDebounceTimer) clearTimeout(workspaceDebounceTimer);
+      workspaceDebounceTimer = setTimeout(() => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+          mainWindow.webContents.send('workspace:changed', { folderPath });
+        }
+      }, 350);
+    });
+    return { success: true };
+  } catch (e) {
+    console.warn('Failed to watch workspace folder:', e);
+    return { success: false, error: e.message };
+  }
+});
+
+ipcMain.handle('workspace:unwatch', () => {
+  if (activeWorkspaceWatcher) {
+    try { activeWorkspaceWatcher.close(); } catch (e) {}
+    activeWorkspaceWatcher = null;
+  }
+  return { success: true };
+});
+
 ipcMain.handle('app:getVersion', () => {
   return app.getVersion();
 });

@@ -22,6 +22,7 @@ import { ConfirmCloseModal } from './components/ConfirmCloseModal';
 import { LoadingScreen } from './components/LoadingScreen';
 import { fileSystem } from './services/FileSystemService';
 import { autosaveService, RevisionSnapshot } from './services/AutosaveService';
+import { workspaceService, WorkspaceState } from './services/WorkspaceService';
 import { ImportExportService } from './services/ImportExportService';
 import { CryptoService } from './services/CryptoService';
 import { calculateDocumentStats, extractDocumentOutline } from './utils/markdownStats';
@@ -113,7 +114,8 @@ export const App: React.FC = () => {
   const [isFindOpen, setIsFindOpen] = useState(false);
   const [isReplaceMode, setIsReplaceMode] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [sidebarTab, setSidebarTab] = useState<'files' | 'outline'>('files');
+  const [sidebarTab, setSidebarTab] = useState<'files' | 'vault' | 'outline'>('files');
+  const [workspaceState, setWorkspaceState] = useState<WorkspaceState>(() => workspaceService.getState());
   const [isImportExportOpen, setIsImportExportOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isStatsOpen, setIsStatsOpen] = useState(false);
@@ -647,6 +649,35 @@ export const App: React.FC = () => {
       };
     }
   }, [activeFile?.path]);
+
+  // Subscribe to local Workspace / Folder Vault updates
+  useEffect(() => {
+    return workspaceService.subscribe((state) => {
+      setWorkspaceState(state);
+    });
+  }, []);
+
+  const handleOpenWorkspace = useCallback(async () => {
+    const success = await workspaceService.openWorkspaceDialog();
+    if (success) {
+      setSidebarTab('vault');
+      setIsSidebarOpen(true);
+      showToast('Vault folder opened', 'success');
+    }
+  }, [showToast]);
+
+  const handleOpenFileByPath = useCallback(async (filePath: string) => {
+    if (typeof window !== 'undefined' && (window as any).electronAPI?.readFile) {
+      try {
+        const content = await (window as any).electronAPI.readFile(filePath);
+        const parts = filePath.split(/[/\\]/);
+        const name = parts[parts.length - 1] || 'Document.md';
+        openFileItemRef.current?.(name, content, filePath);
+      } catch (err: any) {
+        showToast(`Failed to open file: ${err.message || 'Disk error'}`, 'error');
+      }
+    }
+  }, [showToast]);
 
   // Update stats & outline when content changes
   const handleContentChange = (newContent: string) => {
@@ -1495,7 +1526,7 @@ export const App: React.FC = () => {
   };
 
   // Toggle unified sidebar drawer
-  const handleToggleSidebar = useCallback((tab?: 'files' | 'outline') => {
+  const handleToggleSidebar = useCallback((tab?: 'files' | 'vault' | 'outline') => {
     setIsSidebarOpen((prev) => {
       if (!prev && tab) {
         setSidebarTab(tab);
@@ -1603,6 +1634,11 @@ export const App: React.FC = () => {
       else if (mod && e.shiftKey && key === 'e') {
         handled = true;
         handleToggleSidebar('files');
+      }
+      // Open Workspace Vault Folder: Ctrl + Shift + O
+      else if (mod && e.shiftKey && key === 'o') {
+        handled = true;
+        handleOpenWorkspace();
       }
       // 8. Import / Export Hub: Ctrl + Shift + I
       else if (mod && e.shiftKey && key === 'i') {
@@ -1887,15 +1923,23 @@ export const App: React.FC = () => {
 
       {/* Main Writing Container */}
       <main className="flex-1 w-full h-full relative overflow-hidden flex flex-row items-stretch">
-        {/* Inline Responsive Companion Sidebar (Documents & Structure Outline) */}
+        {/* Inline Responsive Companion Sidebar (Documents, Vault & Structure Outline) */}
         <SidebarDrawer
           isOpen={isSidebarOpen}
           activeTab={sidebarTab}
           onTabChange={setSidebarTab}
           files={files}
           activeFileId={activeFileId}
+          activeFilePath={activeFile?.path}
           outline={outline}
           currentOffset={cursorPos.offset}
+          workspacePath={workspaceState.folderPath}
+          workspaceName={workspaceState.folderName}
+          workspaceTree={workspaceState.tree}
+          onOpenWorkspaceDialog={handleOpenWorkspace}
+          onRefreshWorkspace={() => workspaceService.refreshTree()}
+          onCloseWorkspace={() => workspaceService.clearWorkspace()}
+          onOpenFileByPath={handleOpenFileByPath}
           onSelectFile={handleSelectFile}
           onNewFile={handleNewFile}
           onOpenFileFromDisk={handleOpenFileFromDisk}
@@ -2109,6 +2153,7 @@ export const App: React.FC = () => {
         onClose={() => setIsCommandPaletteOpen(false)}
         onNewFile={handleNewFile}
         onOpenFile={handleOpenFileFromDisk}
+        onOpenWorkspace={handleOpenWorkspace}
         onSaveFile={() => handleSaveFile(false)}
         onSaveFileAs={() => handleSaveFile(true)}
         onLoadShowcase={handleLoadShowcase}

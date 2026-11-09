@@ -3,6 +3,9 @@ import {
   FileText,
   Plus,
   FolderOpen,
+  Folder,
+  ChevronRight,
+  RotateCw,
   Star,
   Trash2,
   Copy,
@@ -20,15 +23,24 @@ import {
   Download,
 } from 'lucide-react';
 import { FileItem, OutlineItem } from '../types';
+import { WorkspaceNode } from '../services/WorkspaceService';
 
 interface SidebarDrawerProps {
   isOpen: boolean;
-  activeTab: 'files' | 'outline';
-  onTabChange: (tab: 'files' | 'outline') => void;
+  activeTab: 'files' | 'vault' | 'outline';
+  onTabChange: (tab: 'files' | 'vault' | 'outline') => void;
   files: FileItem[];
   activeFileId: string | null;
+  activeFilePath?: string | null;
   outline: OutlineItem[];
   currentOffset: number;
+  workspacePath?: string | null;
+  workspaceName?: string | null;
+  workspaceTree?: WorkspaceNode[];
+  onOpenWorkspaceDialog?: () => void;
+  onRefreshWorkspace?: () => void;
+  onCloseWorkspace?: () => void;
+  onOpenFileByPath?: (filePath: string) => void;
   onSelectFile: (file: FileItem) => void;
   onNewFile: () => void;
   onOpenFileFromDisk: () => void;
@@ -44,14 +56,79 @@ interface SidebarDrawerProps {
   onClose: () => void;
 }
 
+const FolderTreeItem: React.FC<{
+  node: WorkspaceNode;
+  level: number;
+  activeFilePath?: string | null;
+  onSelect?: (path: string) => void;
+}> = ({ node, level, activeFilePath, onSelect }) => {
+  const [isOpen, setIsOpen] = useState(true);
+
+  if (node.isDirectory) {
+    return (
+      <div className="flex flex-col">
+        <button
+          type="button"
+          onClick={() => setIsOpen((prev) => !prev)}
+          className="flex items-center gap-1.5 py-1 px-2 rounded-md hover:bg-[var(--hover-bg)] text-[var(--text-color)] text-left cursor-pointer w-full text-xs"
+          style={{ paddingLeft: `${6 + level * 12}px` }}
+        >
+          <ChevronRight className={`w-3 h-3 text-[var(--muted-color)] transition-transform duration-150 ${isOpen ? 'rotate-90' : ''}`} />
+          <Folder className="w-3.5 h-3.5 text-[var(--muted-color)] flex-shrink-0" />
+          <span className="truncate font-medium">{node.name}</span>
+        </button>
+        {isOpen && node.children && (
+          <div className="flex flex-col">
+            {node.children.map((child) => (
+              <FolderTreeItem
+                key={child.path}
+                node={child}
+                level={level + 1}
+                activeFilePath={activeFilePath}
+                onSelect={onSelect}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  const isCurrent = activeFilePath && node.path.toLowerCase() === activeFilePath.toLowerCase();
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelect?.(node.path)}
+      className={`flex items-center gap-2 py-1 pr-2 rounded-md transition-colors text-left cursor-pointer w-full text-xs ${
+        isCurrent
+          ? 'bg-[var(--hover-bg)] text-[var(--text-color)] font-medium border border-[var(--border-color)]'
+          : 'text-[var(--muted-color)] hover:text-[var(--text-color)] hover:bg-[var(--hover-bg)]/60'
+      }`}
+      style={{ paddingLeft: `${20 + level * 12}px` }}
+    >
+      <FileText className="w-3.5 h-3.5 flex-shrink-0 opacity-75" />
+      <span className="truncate">{node.name}</span>
+    </button>
+  );
+};
+
 export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
   isOpen,
   activeTab,
   onTabChange,
   files,
   activeFileId,
+  activeFilePath,
   outline,
   currentOffset,
+  workspacePath,
+  workspaceName,
+  workspaceTree = [],
+  onOpenWorkspaceDialog,
+  onRefreshWorkspace,
+  onCloseWorkspace,
+  onOpenFileByPath,
   onSelectFile,
   onNewFile,
   onOpenFileFromDisk,
@@ -221,15 +298,29 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
                 e.stopPropagation();
                 onTabChange('files');
               }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all active:scale-95 cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium transition-all active:scale-95 cursor-pointer ${
                 activeTab === 'files'
                   ? 'bg-[var(--surface-color)] text-[var(--text-color)] shadow-xs border border-[var(--border-color)]'
                   : 'text-[var(--muted-color)] hover:text-[var(--text-color)]'
               }`}
             >
               <FileText className="w-3 h-3" />
-              <span>Documents</span>
-              <span className="text-[10px] opacity-60 font-mono">({files.length})</span>
+              <span>Notes</span>
+            </button>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onTabChange('vault');
+              }}
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium transition-all active:scale-95 cursor-pointer ${
+                activeTab === 'vault'
+                  ? 'bg-[var(--surface-color)] text-[var(--text-color)] shadow-xs border border-[var(--border-color)]'
+                  : 'text-[var(--muted-color)] hover:text-[var(--text-color)]'
+              }`}
+            >
+              <FolderOpen className="w-3 h-3" />
+              <span>Vault</span>
             </button>
             <button
               type="button"
@@ -237,15 +328,14 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
                 e.stopPropagation();
                 onTabChange('outline');
               }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all active:scale-95 cursor-pointer ${
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-[11px] font-medium transition-all active:scale-95 cursor-pointer ${
                 activeTab === 'outline'
                   ? 'bg-[var(--surface-color)] text-[var(--text-color)] shadow-xs border border-[var(--border-color)]'
                   : 'text-[var(--muted-color)] hover:text-[var(--text-color)]'
               }`}
             >
               <ListTree className="w-3 h-3" />
-              <span>Structure</span>
-              <span className="text-[10px] opacity-60 font-mono">({outline.length})</span>
+              <span>Outline</span>
             </button>
           </div>
 
@@ -590,6 +680,76 @@ export const SidebarDrawer: React.FC<SidebarDrawerProps> = ({
                 className="hidden"
               />
             </label>
+          </div>
+        )}
+
+        {/* TAB 2: LOCAL VAULT (FOLDER TREE) */}
+        {activeTab === 'vault' && (
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {!workspacePath ? (
+              <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+                <FolderOpen className="w-9 h-9 text-[var(--muted-color)] mb-3 opacity-50" />
+                <h3 className="font-semibold text-xs text-[var(--text-color)] mb-1">No Local Vault Open</h3>
+                <p className="text-[11px] text-[var(--muted-color)] mb-4 max-w-[210px] leading-relaxed">
+                  Open any local folder on your computer to browse, manage, and edit Markdown files directly.
+                </p>
+                <button
+                  type="button"
+                  onClick={onOpenWorkspaceDialog}
+                  className="py-1.5 px-3.5 rounded-lg bg-[var(--hover-bg)] hover:bg-[var(--hover-bg)]/80 border border-[var(--border-color)] font-medium text-xs text-[var(--text-color)] cursor-pointer transition-colors active:scale-95"
+                >
+                  Open Local Folder
+                </button>
+              </div>
+            ) : (
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="px-3 py-2 border-b border-[var(--border-color)] flex items-center justify-between bg-[var(--hover-bg)]/40 flex-shrink-0">
+                  <div className="flex items-center gap-1.5 min-w-0" title={workspacePath}>
+                    <Folder className="w-3.5 h-3.5 text-[var(--text-color)] flex-shrink-0" />
+                    <span className="font-semibold text-xs text-[var(--text-color)] truncate">{workspaceName || 'Vault'}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={onRefreshWorkspace}
+                      className="p-1 rounded hover:bg-[var(--hover-bg)] text-[var(--muted-color)] hover:text-[var(--text-color)] cursor-pointer active:scale-90 transition-transform"
+                      title="Refresh Vault Folder"
+                    >
+                      <RotateCw className="w-3 h-3" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={onCloseWorkspace}
+                      className="p-1 rounded hover:bg-[var(--hover-bg)] text-[var(--muted-color)] hover:text-[var(--text-color)] cursor-pointer active:scale-90 transition-transform"
+                      title="Close Vault"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
+                  {workspaceTree.length === 0 ? (
+                    <div className="py-12 text-center text-[var(--muted-color)] text-xs px-4">
+                      No markdown files found in this folder.<br />
+                      <span className="text-[10px] opacity-75 mt-1 inline-block">
+                        Create or add .md files to see them here.
+                      </span>
+                    </div>
+                  ) : (
+                    workspaceTree.map((item) => (
+                      <FolderTreeItem
+                        key={item.path}
+                        node={item}
+                        level={0}
+                        activeFilePath={activeFilePath}
+                        onSelect={onOpenFileByPath}
+                      />
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
