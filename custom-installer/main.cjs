@@ -13,12 +13,12 @@ function createWindow() {
   const iconPath = path.resolve(__dirname, '../build/icon.ico');
 
   mainWindow = new BrowserWindow({
-    width: 780,
-    height: 520,
+    width: 800,
+    height: 540,
     frame: false,
     resizable: false,
     maximizable: false,
-    backgroundColor: '#FAF9F8',
+    backgroundColor: '#0F0F11',
     icon: fs.existsSync(iconPath) ? iconPath : undefined,
     show: false,
     webPreferences: {

@@ -41,3 +41,4 @@ Line 2 with [[Note Beta|Custom Beta]] and another [[Note Gamma]].`;
     });
   });
 });
+

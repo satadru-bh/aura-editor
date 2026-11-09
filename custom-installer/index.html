@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8">
   <title>Aura.md Installer</title>
@@ -122,14 +122,17 @@
             <!-- Mode 2: Update View -->
             <div id="view-mode-update" class="mode-view hidden">
               <div class="mode-card update-card">
-                <div class="mode-badge badge-update">UPDATE AVAILABLE</div>
+                <div class="mode-badge badge-update">
+                  <span class="badge-dot"></span>
+                  <span>Update Available</span>
+                </div>
                 <div class="version-row">
-                  <span class="ver-text" id="lbl-installed-version">v1.0.0</span>
+                  <span class="ver-text" id="lbl-installed-version">v1.0.1</span>
                   <span class="ver-arrow">→</span>
-                  <span class="ver-text ver-new" id="lbl-latest-version">v1.0.1</span>
+                  <span class="ver-text ver-new" id="lbl-latest-version">v1.0.2</span>
                 </div>
                 <p class="mode-sub">
-                  A newer release is ready on GitHub. Your settings, notes, and workspaces are safely preserved.
+                  A newer release is ready with latest enhancements. Your documents, settings, and vaults remain untouched.
                 </p>
               </div>
             </div>
@@ -137,9 +140,12 @@
             <!-- Mode 3: Repair / Maintenance View -->
             <div id="view-mode-repair" class="mode-view hidden">
               <div class="mode-card repair-card">
-                <div class="mode-badge badge-installed">INSTALLED &amp; UP TO DATE</div>
+                <div class="mode-badge badge-installed">
+                  <span class="badge-dot"></span>
+                  <span>Installed &amp; Up to Date</span>
+                </div>
                 <p class="repair-intro">
-                  Aura.md <strong id="lbl-current-version">v1.0.0</strong> is installed on this PC.
+                  Aura.md <strong id="lbl-current-version">v1.0.1</strong> is ready on this PC.
                 </p>
                 <div class="repair-actions-grid">
                   <button type="button" id="btn-maint-launch" class="btn-primary repair-btn">
@@ -154,7 +160,7 @@
                     </svg>
                     <span>Repair Installation</span>
                   </button>
-                  <button type="button" id="btn-maint-uninstall" class="btn-secondary btn-danger repair-btn">
+                  <button type="button" id="btn-maint-uninstall" class="btn-tertiary btn-danger repair-btn">
                     <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                       <polyline points="3 6 5 6 21 6" />
                       <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
@@ -198,75 +204,75 @@
           </div>
         </section>
 
-        <!-- Screen 2: Options -->
+        <!-- Screen 2: Setup Options -->
         <section class="screen" id="screen-options">
           <div class="screen-content">
             <div class="section-header">
-              <h2 class="section-title">Options</h2>
-              <p class="section-desc">Configure desktop shortcuts and shell integrations.</p>
+              <h2 class="section-title">Installation Options</h2>
+              <p class="section-desc">Choose shortcuts and system preferences.</p>
             </div>
 
-            <div class="options-list">
-              <label class="option-row">
+            <div class="options-group">
+              <label class="option-row" for="chk-desktop">
                 <input type="checkbox" id="chk-desktop" checked />
                 <span class="custom-check">
-                  <svg viewBox="0 0 12 12" fill="none">
-                    <polyline points="2.5 6 5 8.5 9.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  <svg viewBox="0 0 12 12" fill="currentColor">
+                    <path d="M4.5 9.5L1.5 6.5L2.5 5.5L4.5 7.5L9.5 2.5L10.5 3.5L4.5 9.5Z" />
                   </svg>
                 </span>
                 <div class="option-info">
-                  <span class="option-title">Create Desktop shortcut</span>
-                  <span class="option-subtitle">Quick launch icon on your Windows desktop</span>
+                  <span class="option-title">Create Desktop Shortcut</span>
+                  <span class="option-subtitle">Places a shortcut on your desktop for quick launch</span>
                 </div>
               </label>
 
-              <label class="option-row">
+              <label class="option-row" for="chk-startmenu">
                 <input type="checkbox" id="chk-startmenu" checked />
                 <span class="custom-check">
-                  <svg viewBox="0 0 12 12" fill="none">
-                    <polyline points="2.5 6 5 8.5 9.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  <svg viewBox="0 0 12 12" fill="currentColor">
+                    <path d="M4.5 9.5L1.5 6.5L2.5 5.5L4.5 7.5L9.5 2.5L10.5 3.5L4.5 9.5Z" />
                   </svg>
                 </span>
                 <div class="option-info">
-                  <span class="option-title">Create Start Menu shortcut</span>
-                  <span class="option-subtitle">Pin to Windows Start search and applications list</span>
+                  <span class="option-title">Create Start Menu Program Group</span>
+                  <span class="option-subtitle">Adds Aura to the Windows Start Menu list</span>
                 </div>
               </label>
 
-              <label class="option-row">
+              <label class="option-row" for="chk-assoc">
                 <input type="checkbox" id="chk-assoc" checked />
                 <span class="custom-check">
-                  <svg viewBox="0 0 12 12" fill="none">
-                    <polyline points="2.5 6 5 8.5 9.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  <svg viewBox="0 0 12 12" fill="currentColor">
+                    <path d="M4.5 9.5L1.5 6.5L2.5 5.5L4.5 7.5L9.5 2.5L10.5 3.5L4.5 9.5Z" />
                   </svg>
                 </span>
                 <div class="option-info">
-                  <span class="option-title">Associate Markdown files (.md, .markdown)</span>
-                  <span class="option-subtitle">Open Markdown files with Aura.md by default</span>
+                  <span class="option-title">Associate with .md and .markdown Files</span>
+                  <span class="option-subtitle">Opens Markdown documents with Aura by default</span>
                 </div>
               </label>
 
-              <label class="option-row">
+              <label class="option-row" for="chk-launch">
                 <input type="checkbox" id="chk-launch" checked />
                 <span class="custom-check">
-                  <svg viewBox="0 0 12 12" fill="none">
-                    <polyline points="2.5 6 5 8.5 9.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  <svg viewBox="0 0 12 12" fill="currentColor">
+                    <path d="M4.5 9.5L1.5 6.5L2.5 5.5L4.5 7.5L9.5 2.5L10.5 3.5L4.5 9.5Z" />
                   </svg>
                 </span>
                 <div class="option-info">
-                  <span class="option-title">Launch Aura.md after completion</span>
-                  <span class="option-subtitle">Open editor immediately once setup finishes</span>
+                  <span class="option-title">Launch Aura.md when setup completes</span>
+                  <span class="option-subtitle">Starts Aura immediately after files are copied</span>
                 </div>
               </label>
             </div>
           </div>
         </section>
 
-        <!-- Screen 3: Installing / Updating / Repairing / Uninstalling Progress -->
+        <!-- Screen 3: Installing Progress -->
         <section class="screen" id="screen-installing">
           <div class="screen-content center-content">
             <div class="progress-hero">
-              <h2 class="section-title" id="install-title">Installing Aura.md...</h2>
+              <h2 class="hero-title" id="install-title" style="font-size: 24px;">Installing Aura.md...</h2>
               <p class="section-desc" id="install-detail">Connecting to GitHub Releases...</p>
 
               <!-- Minimal Progress Bar -->

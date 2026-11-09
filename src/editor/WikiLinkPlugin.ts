@@ -129,3 +129,4 @@ export function createWikiLinkAutocompletion(getAvailableNotes: () => { name: st
     defaultKeymap: true,
   });
 }
+

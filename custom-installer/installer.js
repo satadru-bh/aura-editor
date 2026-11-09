@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Theme Toggle Logic (Light / Dark mode with persistence)
   // --------------------------------------------------------------------------
   const THEME_STORAGE_KEY = 'aura_installer_theme_mode';
-  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'light';
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY) || 'dark';
   applyTheme(savedTheme);
 
   function applyTheme(theme) {
@@ -139,8 +139,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (viewRepair) viewRepair.classList.add('hidden');
         if (viewUpdate) viewUpdate.classList.remove('hidden');
 
-        if (lblInstalledVersion) lblInstalledVersion.textContent = `v${installState.installedVersion || '1.0.0'}`;
-        if (lblLatestVersion) lblLatestVersion.textContent = `${installState.latestVersion || 'v1.0.1'}`;
+        if (lblInstalledVersion) lblInstalledVersion.textContent = `v${installState.installedVersion || '1.0.1'}`;
+        if (lblLatestVersion) lblLatestVersion.textContent = `${installState.latestVersion || 'v1.0.2'}`;
         if (stepLbl3) stepLbl3.textContent = 'Updating';
       } else if (activeMode === 'repair') {
         if (titlebarText) titlebarText.textContent = 'Aura.md Maintenance';
@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (viewUpdate) viewUpdate.classList.add('hidden');
         if (viewRepair) viewRepair.classList.remove('hidden');
 
-        if (lblCurrentVersion) lblCurrentVersion.textContent = `v${installState.installedVersion || '1.0.0'}`;
+        if (lblCurrentVersion) lblCurrentVersion.textContent = `v${installState.installedVersion || '1.0.1'}`;
         if (stepLbl3) stepLbl3.textContent = 'Repairing';
       } else {
         // Fresh install

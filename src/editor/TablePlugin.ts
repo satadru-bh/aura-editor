@@ -265,3 +265,4 @@ export function createTableKeymap(): KeyBinding[] {
 export function createTablePlugin() {
   return Prec.high(keymap.of(createTableKeymap()));
 }
+
