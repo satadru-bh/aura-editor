@@ -5,7 +5,6 @@ const https = require('https');
 const http = require('http');
 const rawFs = process.versions.electron ? require('original-fs') : require('fs');
 const rawFsPromises = rawFs.promises;
-const fsPromises = rawFsPromises;
 const { spawn, exec } = require('child_process');
 
 let mainWindow = null;
@@ -89,6 +88,74 @@ function getRepoName() {
   return 'satadru-bh/aura-editor';
 }
 
+// Helper: Semver comparison (returns 1 if v1 > v2, -1 if v1 < v2, 0 if equal)
+function compareVersions(v1, v2) {
+  if (!v1 || !v2) return 0;
+  const clean1 = String(v1).replace(/^v/, '').trim();
+  const clean2 = String(v2).replace(/^v/, '').trim();
+  const parts1 = clean1.split('.').map((p) => parseInt(p, 10) || 0);
+  const parts2 = clean2.split('.').map((p) => parseInt(p, 10) || 0);
+  const maxLen = Math.max(parts1.length, parts2.length);
+  for (let i = 0; i < maxLen; i++) {
+    const num1 = parts1[i] || 0;
+    const num2 = parts2[i] || 0;
+    if (num1 > num2) return 1;
+    if (num1 < num2) return -1;
+  }
+  return 0;
+}
+
+// Helper: Query Windows Registry Value safely
+function queryRegistryValue(key, valueName) {
+  return new Promise((resolve) => {
+    exec(`reg query "${key}" /v "${valueName}"`, (err, stdout) => {
+      if (err || !stdout) return resolve(null);
+      const regex = new RegExp(`${valueName}\\s+REG_SZ\\s+(.+)`, 'i');
+      const match = stdout.match(regex);
+      resolve(match && match[1] ? match[1].trim() : null);
+    });
+  });
+}
+
+// Helper: Kill any running instances of an image (e.g. Aura Editor.exe)
+function killProcess(imageName) {
+  return new Promise((resolve) => {
+    exec(`taskkill /F /IM "${imageName}"`, () => resolve());
+  });
+}
+
+// Helper: Detect whether Aura Editor is already installed on the system
+async function detectInstallation() {
+  const uninstallRegKey = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AuraEditor';
+  let installDir = await queryRegistryValue(uninstallRegKey, 'InstallLocation');
+  let installedVersion = await queryRegistryValue(uninstallRegKey, 'DisplayVersion');
+
+  const localAppData = process.env.LOCALAPPDATA || path.join(process.env.USERPROFILE || 'C:\\', 'AppData', 'Local');
+  const defaultDir = path.join(localAppData, 'Programs', 'Aura Editor');
+
+  if (installDir && fs.existsSync(path.join(installDir, 'Aura Editor.exe'))) {
+    return {
+      isInstalled: true,
+      installDir,
+      installedVersion: installedVersion || '1.0.0',
+    };
+  }
+
+  if (fs.existsSync(path.join(defaultDir, 'Aura Editor.exe'))) {
+    return {
+      isInstalled: true,
+      installDir: defaultDir,
+      installedVersion: installedVersion || '1.0.0',
+    };
+  }
+
+  return {
+    isInstalled: false,
+    installDir: defaultDir,
+    installedVersion: null,
+  };
+}
+
 // Helper: Fetch latest release asset info from GitHub Releases
 function getLatestReleaseAsset(repo) {
   return new Promise((resolve, reject) => {
@@ -100,7 +167,7 @@ function getLatestReleaseAsset(repo) {
           'User-Agent': 'Aura-Custom-Installer/1.0',
           'Accept': 'application/vnd.github.v3+json',
         },
-        timeout: 12000,
+        timeout: 10000,
       },
       (res) => {
         if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
@@ -115,7 +182,7 @@ function getLatestReleaseAsset(repo) {
           try {
             const release = JSON.parse(data);
             const assets = release.assets || [];
-            // Look for windows zip asset (e.g. Aura-Editor-1.0.0-win-x64.zip or *.zip)
+            // Look for windows zip asset (e.g. Aura-Editor-1.0.0-win.zip or *.zip)
             const zipAsset =
               assets.find(
                 (a) =>
@@ -150,6 +217,47 @@ function getLatestReleaseAsset(repo) {
     });
   });
 }
+
+// IPC: Check installation status and compare with GitHub latest release
+ipcMain.handle('installer:checkInstallation', async () => {
+  const detection = await detectInstallation();
+  const repo = getRepoName();
+  let latestInfo = null;
+
+  try {
+    latestInfo = await getLatestReleaseAsset(repo);
+  } catch (err) {
+    console.warn('Could not fetch latest GitHub release info:', err.message);
+  }
+
+  let mode = 'install';
+  let hasUpdate = false;
+  const latestVersion = latestInfo ? latestInfo.version.replace(/^v/, '') : null;
+  const installedVersion = detection.installedVersion ? detection.installedVersion.replace(/^v/, '') : null;
+
+  if (detection.isInstalled) {
+    if (latestVersion && installedVersion && compareVersions(latestVersion, installedVersion) > 0) {
+      mode = 'update';
+      hasUpdate = true;
+    } else {
+      mode = 'repair';
+      hasUpdate = false;
+    }
+  } else {
+    mode = 'install';
+    hasUpdate = false;
+  }
+
+  return {
+    isInstalled: detection.isInstalled,
+    installDir: detection.installDir,
+    installedVersion: detection.installedVersion,
+    latestVersion: latestInfo ? latestInfo.version : (installedVersion || '1.0.0'),
+    hasUpdate,
+    mode, // 'install' | 'update' | 'repair'
+    releaseAsset: latestInfo,
+  };
+});
 
 // Helper: Download file with redirect handling and streaming progress
 function downloadFile(url, destPath, onProgress) {
@@ -313,13 +421,14 @@ function runRegCommand(command) {
   });
 }
 
-// Installation worker
+// Installation worker (Handles Install, Update, and Repair)
 ipcMain.handle('installer:startInstall', async (event, options) => {
   const {
     targetDir,
     createDesktopShortcut = true,
     createStartMenuShortcut = true,
     associateFiles = true,
+    mode = 'install', // 'install' | 'update' | 'repair'
   } = options;
 
   const sendProgress = (percent, status, detail = '') => {
@@ -329,8 +438,14 @@ ipcMain.handle('installer:startInstall', async (event, options) => {
   };
 
   try {
-    sendProgress(5, 'Preparing destination directory...', targetDir);
+    // Step 0: Ensure any running instance of Aura Editor is terminated before writing files
+    sendProgress(5, 'Preparing system...', 'Ensuring previous instances are closed...');
+    await killProcess('Aura Editor.exe');
+
+    sendProgress(8, 'Preparing destination directory...', targetDir);
     await rawFsPromises.mkdir(targetDir, { recursive: true });
+
+    let installedVersionTag = '1.0.0';
 
     // Check if offline/local payload exists (development/fallback)
     let localSourceDir = app.isPackaged
@@ -342,11 +457,11 @@ ipcMain.handle('installer:startInstall', async (event, options) => {
     }
 
     if (fs.existsSync(localSourceDir)) {
-      sendProgress(12, 'Scanning local application payload...');
+      sendProgress(12, 'Scanning application components...');
       const allFiles = await getFilesRecursively(localSourceDir);
       const totalFiles = allFiles.length;
 
-      sendProgress(15, 'Extracting Aura Editor core engine...');
+      sendProgress(15, mode === 'update' ? 'Updating Aura Editor...' : 'Extracting Aura Editor core engine...');
       let copiedCount = 0;
       for (const srcFile of allFiles) {
         const relPath = path.relative(localSourceDir, srcFile);
@@ -359,26 +474,28 @@ ipcMain.handle('installer:startInstall', async (event, options) => {
         copiedCount++;
         const pct = Math.round(15 + (copiedCount / totalFiles) * 65);
         if (copiedCount % 10 === 0 || copiedCount === totalFiles) {
-          sendProgress(pct, 'Extracting application components...', relPath);
+          sendProgress(pct, mode === 'update' ? 'Updating components...' : 'Extracting application components...', relPath);
         }
       }
     } else {
-      // Standalone Online Installer: Fetch and download directly from GitHub Releases
+      // Online Installer / Updater / Repairer: Fetch directly from GitHub Releases
       const repo = getRepoName();
       sendProgress(10, 'Connecting to GitHub Releases...', `Checking latest release on ${repo}`);
 
       const releaseAsset = await getLatestReleaseAsset(repo);
+      installedVersionTag = releaseAsset.version.replace(/^v/, '');
       const tempZipPath = path.join(app.getPath('temp'), `aura-release-${Date.now()}.zip`);
 
       const mbTotal = (releaseAsset.size / (1024 * 1024)).toFixed(1);
-      sendProgress(15, `Downloading Aura Editor (${releaseAsset.version})...`, `${releaseAsset.name} (~${mbTotal} MB)`);
+      const actionVerb = mode === 'update' ? 'Updating to' : mode === 'repair' ? 'Repairing with' : 'Downloading';
+      sendProgress(15, `${actionVerb} Aura Editor (${releaseAsset.version})...`, `${releaseAsset.name} (~${mbTotal} MB)`);
 
       await downloadFile(releaseAsset.downloadUrl, tempZipPath, (dlPercent, received, total) => {
         const overallPct = Math.round(15 + (dlPercent / 100) * 60);
         const mbReceived = (received / (1024 * 1024)).toFixed(1);
         sendProgress(
           overallPct,
-          `Downloading Aura Editor ${releaseAsset.version} (${mbReceived} MB / ${mbTotal} MB)...`,
+          `${actionVerb} Aura Editor ${releaseAsset.version} (${mbReceived} MB / ${mbTotal} MB)...`,
           `${dlPercent}% complete`
         );
       });
@@ -396,16 +513,16 @@ ipcMain.handle('installer:startInstall', async (event, options) => {
     const exePath = path.join(targetDir, 'Aura Editor.exe');
     const icoPath = path.join(targetDir, 'Aura Editor.exe,0');
 
-    // Create Shortcuts
+    // Create / Update Shortcuts
     if (createDesktopShortcut) {
-      sendProgress(82, 'Creating Desktop shortcut...');
+      sendProgress(82, 'Updating Desktop shortcut...');
       const desktopDir = (app && app.getPath ? app.getPath('desktop') : null) || path.join(process.env.USERPROFILE || 'C:\\', 'Desktop');
       const desktopShortcut = path.join(desktopDir, 'Aura Editor.lnk');
       await createShortcut(desktopShortcut, exePath, icoPath, 'Aura Editor - Live Markdown Workspace');
     }
 
     if (createStartMenuShortcut) {
-      sendProgress(87, 'Creating Start Menu shortcut...');
+      sendProgress(87, 'Updating Start Menu shortcut...');
       const appDataDir = (app && app.getPath ? app.getPath('appData') : null) || process.env.APPDATA || 'C:\\';
       const startMenuDir = path.join(
         appDataDir,
@@ -456,7 +573,7 @@ exit
     const uninstallRegKey = 'HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AuraEditor';
     const unregCmds = [
       `reg add "${uninstallRegKey}" /v "DisplayName" /d "Aura Editor" /f`,
-      `reg add "${uninstallRegKey}" /v "DisplayVersion" /d "1.0.0" /f`,
+      `reg add "${uninstallRegKey}" /v "DisplayVersion" /d "${installedVersionTag}" /f`,
       `reg add "${uninstallRegKey}" /v "Publisher" /d "Aura Team" /f`,
       `reg add "${uninstallRegKey}" /v "DisplayIcon" /d "${exePath}" /f`,
       `reg add "${uninstallRegKey}" /v "InstallLocation" /d "${targetDir}" /f`,
@@ -467,10 +584,69 @@ exit
       await runRegCommand(cmd);
     }
 
-    sendProgress(100, 'Installation complete!', 'All components installed.');
-    return { success: true, targetDir, exePath };
+    const doneMessage =
+      mode === 'update'
+        ? 'Update complete!'
+        : mode === 'repair'
+        ? 'Repair complete!'
+        : 'Installation complete!';
+
+    sendProgress(100, doneMessage, 'Ready to launch.');
+    return { success: true, targetDir, exePath, mode };
   } catch (err) {
     console.error('INSTALLATION ERROR:', err);
+    return { success: false, error: err.message };
+  }
+});
+
+// Uninstaller worker
+ipcMain.handle('installer:uninstall', async (_event, targetDir) => {
+  const sendProgress = (percent, status, detail = '') => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('installer:progress', { percent, status, detail });
+    }
+  };
+
+  try {
+    sendProgress(15, 'Stopping active Aura Editor processes...', 'Terminating instances...');
+    await killProcess('Aura Editor.exe');
+
+    sendProgress(35, 'Removing shortcuts...', 'Desktop & Start Menu...');
+    const desktopDir = (app && app.getPath ? app.getPath('desktop') : null) || path.join(process.env.USERPROFILE || 'C:\\', 'Desktop');
+    const oneDriveDesktop = path.join(process.env.USERPROFILE || 'C:\\', 'OneDrive', 'Desktop');
+    const appDataDir = (app && app.getPath ? app.getPath('appData') : null) || process.env.APPDATA || 'C:\\';
+    const startMenuDir = path.join(appDataDir, 'Microsoft', 'Windows', 'Start Menu', 'Programs');
+
+    const shortcuts = [
+      path.join(desktopDir, 'Aura Editor.lnk'),
+      path.join(oneDriveDesktop, 'Aura Editor.lnk'),
+      path.join(startMenuDir, 'Aura Editor.lnk'),
+    ];
+
+    for (const sc of shortcuts) {
+      try {
+        if (fs.existsSync(sc)) fs.unlinkSync(sc);
+      } catch (e) {}
+    }
+
+    sendProgress(60, 'Cleaning Windows registry entries...', 'Removing file associations and uninstaller...');
+    await runRegCommand('reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AuraEditor" /f');
+    await runRegCommand('reg delete "HKCU\\Software\\Classes\\AuraEditor.md" /f');
+    await runRegCommand('reg delete "HKCU\\Software\\Classes\\.md" /f');
+    await runRegCommand('reg delete "HKCU\\Software\\Classes\\.markdown" /f');
+
+    sendProgress(80, 'Removing application files...', targetDir);
+    if (targetDir && fs.existsSync(targetDir)) {
+      try {
+        await rawFsPromises.rm(targetDir, { recursive: true, force: true });
+      } catch (err) {
+        exec(`cmd /c "timeout /t 1 >nul & rmdir /s /q \\"${targetDir}\\""`);
+      }
+    }
+
+    sendProgress(100, 'Uninstallation Complete', 'Aura Editor has been successfully removed from your PC.');
+    return { success: true };
+  } catch (err) {
     return { success: false, error: err.message };
   }
 });

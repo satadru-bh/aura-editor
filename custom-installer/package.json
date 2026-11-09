@@ -12,7 +12,7 @@
     "electronVersion": "35.7.5",
     "compression": "normal",
     "appId": "com.aura.editor.installer",
-    "productName": "Aura Setup",
+    "productName": "Aura Installer",
     "directories": {
       "output": "../dist-installer"
     },
@@ -34,14 +34,14 @@
           ]
         }
       ],
-      "artifactName": "Aura-Setup.${ext}"
+      "artifactName": "Aura-Installer.${ext}"
     },
     "nsis": {
       "oneClick": true,
       "perMachine": false,
       "deleteAppDataOnUninstall": false,
       "runAfterFinish": true,
-      "artifactName": "Aura-Setup.exe"
+      "artifactName": "Aura-Installer.exe"
     }
   }
 }

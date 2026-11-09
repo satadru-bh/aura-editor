@@ -19,7 +19,7 @@
           <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6" />
           <path d="M4 12C6.5 9 17.5 9 20 12C17.5 15 6.5 15 4 12Z" stroke="currentColor" stroke-width="1.6" />
         </svg>
-        <span class="titlebar-title">Aura.md Installer</span>
+        <span class="titlebar-title" id="titlebar-text">Aura.md Installer</span>
       </div>
 
       <div class="titlebar-controls">
@@ -61,49 +61,49 @@
     <div class="app-body">
       <!-- Left Sidebar with Vertical Stepper -->
       <aside class="sidebar">
-        <nav class="stepper" aria-label="Installation Progress">
+        <nav class="stepper" aria-label="Setup Steps">
           <div class="stepper-line"></div>
           
           <div class="step-item active" data-step="0">
             <span class="step-indicator">
               <span class="step-dot"></span>
             </span>
-            <span class="step-label">Welcome</span>
+            <span class="step-label" id="step-lbl-0">Welcome</span>
           </div>
 
           <div class="step-item" data-step="1">
             <span class="step-indicator">
               <span class="step-dot"></span>
             </span>
-            <span class="step-label">Install Location</span>
+            <span class="step-label" id="step-lbl-1">Install Location</span>
           </div>
 
           <div class="step-item" data-step="2">
             <span class="step-indicator">
               <span class="step-dot"></span>
             </span>
-            <span class="step-label">Options</span>
+            <span class="step-label" id="step-lbl-2">Options</span>
           </div>
 
           <div class="step-item" data-step="3">
             <span class="step-indicator">
               <span class="step-dot"></span>
             </span>
-            <span class="step-label">Installing</span>
+            <span class="step-label" id="step-lbl-3">Installing</span>
           </div>
 
           <div class="step-item" data-step="4">
             <span class="step-indicator">
               <span class="step-dot"></span>
             </span>
-            <span class="step-label">Complete</span>
+            <span class="step-label" id="step-lbl-4">Complete</span>
           </div>
         </nav>
       </aside>
 
       <!-- Right Main Panel -->
       <main class="main-panel">
-        <!-- Screen 0: Welcome -->
+        <!-- Screen 0: Welcome / Mode Selector -->
         <section class="screen active" id="screen-welcome">
           <div class="screen-content center-content">
             <div class="hero-logo-box">
@@ -111,9 +111,60 @@
             </div>
             <h1 class="hero-title">Aura.md</h1>
             <p class="hero-tagline">A MINIMAL TEXT EDITOR</p>
-            <p class="hero-desc">
-              A focused, minimal text editor for writing, coding, and everything in between.
-            </p>
+
+            <!-- Mode 1: Fresh Install View -->
+            <div id="view-mode-install" class="mode-view">
+              <p class="hero-desc">
+                A focused, minimal text editor for writing, coding, and everything in between.
+              </p>
+            </div>
+
+            <!-- Mode 2: Update View -->
+            <div id="view-mode-update" class="mode-view hidden">
+              <div class="mode-card update-card">
+                <div class="mode-badge badge-update">UPDATE AVAILABLE</div>
+                <div class="version-row">
+                  <span class="ver-text" id="lbl-installed-version">v1.0.0</span>
+                  <span class="ver-arrow">→</span>
+                  <span class="ver-text ver-new" id="lbl-latest-version">v1.0.1</span>
+                </div>
+                <p class="mode-sub">
+                  A newer release is ready on GitHub. Your settings, notes, and workspaces are safely preserved.
+                </p>
+              </div>
+            </div>
+
+            <!-- Mode 3: Repair / Maintenance View -->
+            <div id="view-mode-repair" class="mode-view hidden">
+              <div class="mode-card repair-card">
+                <div class="mode-badge badge-installed">INSTALLED &amp; UP TO DATE</div>
+                <p class="repair-intro">
+                  Aura.md <strong id="lbl-current-version">v1.0.0</strong> is installed on this PC.
+                </p>
+                <div class="repair-actions-grid">
+                  <button type="button" id="btn-maint-launch" class="btn-primary repair-btn">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                      <polygon points="6 4 20 12 6 20 6 4" />
+                    </svg>
+                    <span>Launch Aura.md</span>
+                  </button>
+                  <button type="button" id="btn-maint-repair" class="btn-secondary repair-btn">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                    </svg>
+                    <span>Repair Installation</span>
+                  </button>
+                  <button type="button" id="btn-maint-uninstall" class="btn-secondary btn-danger repair-btn">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                    </svg>
+                    <span>Uninstall</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
           </div>
         </section>
 
@@ -203,7 +254,7 @@
                   </svg>
                 </span>
                 <div class="option-info">
-                  <span class="option-title">Launch Aura.md after install</span>
+                  <span class="option-title">Launch Aura.md after completion</span>
                   <span class="option-subtitle">Open editor immediately once setup finishes</span>
                 </div>
               </label>
@@ -211,12 +262,12 @@
           </div>
         </section>
 
-        <!-- Screen 3: Installing -->
+        <!-- Screen 3: Installing / Updating / Repairing / Uninstalling Progress -->
         <section class="screen" id="screen-installing">
           <div class="screen-content center-content">
             <div class="progress-hero">
               <h2 class="section-title" id="install-title">Installing Aura.md...</h2>
-              <p class="section-desc" id="install-detail">Extracting application core and assets...</p>
+              <p class="section-desc" id="install-detail">Connecting to GitHub Releases...</p>
 
               <!-- Minimal Progress Bar -->
               <div class="progress-container">
@@ -225,7 +276,7 @@
                 </div>
                 <div class="progress-stats">
                   <span id="progress-percent" class="progress-percent">0%</span>
-                  <span class="progress-badge">Optimizing</span>
+                  <span class="progress-badge" id="progress-badge">Optimizing</span>
                 </div>
               </div>
             </div>
@@ -235,14 +286,14 @@
         <!-- Screen 4: Complete -->
         <section class="screen" id="screen-complete">
           <div class="screen-content center-content">
-            <div class="complete-badge">
+            <div class="complete-badge" id="complete-badge-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12" />
               </svg>
             </div>
-            <h2 class="hero-title" style="font-size: 26px; margin-top: 12px;">Setup Complete</h2>
-            <p class="hero-desc" style="max-width: 360px; margin-top: 6px;">
-              Aura.md is installed and ready to elevate your writing experience.
+            <h2 class="hero-title" id="complete-title" style="font-size: 26px; margin-top: 14px;">Setup Complete</h2>
+            <p class="hero-desc" id="complete-desc" style="max-width: 380px; margin-top: 6px;">
+              Aura.md is ready to elevate your writing experience.
             </p>
 
             <div class="complete-actions">

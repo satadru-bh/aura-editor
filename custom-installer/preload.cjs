@@ -1,9 +1,11 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('installerAPI', {
+  checkInstallation: () => ipcRenderer.invoke('installer:checkInstallation'),
   getDefaultPath: () => ipcRenderer.invoke('installer:getDefaultPath'),
   browseFolder: (currentPath) => ipcRenderer.invoke('installer:browseFolder', currentPath),
   startInstall: (options) => ipcRenderer.invoke('installer:startInstall', options),
+  uninstall: (targetDir) => ipcRenderer.invoke('installer:uninstall', targetDir),
   launchApp: (targetDir) => ipcRenderer.invoke('installer:launchApp', targetDir),
   openFolder: (folderPath) => ipcRenderer.invoke('installer:openFolder', folderPath),
   minimizeWindow: () => ipcRenderer.send('installer:minimize'),

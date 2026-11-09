@@ -19,7 +19,7 @@
     "electron:dev": "concurrently \"vite\" \"cross-env ELECTRON_DEV=1 electron .\"",
     "electron:build": "npm run generate:installer-assets && npm run build && electron-builder",
     "package:win": "npm run build && electron-packager . \"Aura Editor\" --platform=win32 --arch=x64 --out=dist-win --overwrite --prune=true",
-    "installer:win": "npm run generate:installer-assets && npm run build && npx electron-builder --win nsis --config.directories.output=installer-out",
+    "installer:win": "npm run build && npx electron-builder --win zip --config.directories.output=installer-out",
     "installer:gui": "electron custom-installer/main.cjs",
     "installer:exe": "npx electron-builder --project custom-installer"
   },
@@ -91,18 +91,13 @@
       "icon": "build/icon.ico",
       "target": [
         {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        },
-        {
           "target": "zip",
           "arch": [
             "x64"
           ]
         }
-      ]
+      ],
+      "artifactName": "Aura-Editor-${version}-win.${ext}"
     },
     "nsis": {
       "oneClick": false,
