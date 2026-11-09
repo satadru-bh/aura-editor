@@ -16,6 +16,8 @@ import { createEditorKeybindings } from '../editor/Keymaps';
 import { createWordTriggerPlugin } from '../editor/WordTriggerPlugin';
 import { createTablePlugin } from '../editor/TablePlugin';
 import { createFocusModePlugin } from '../editor/FocusPlugin';
+import { createBionicReadingPlugin } from '../editor/BionicReadingPlugin';
+import { createHemingwayPlugin } from '../editor/HemingwayPlugin';
 import { AudioService } from '../services/AudioService';
 import { assetManager } from '../services/AssetManagerService';
 import { workspaceService } from '../services/WorkspaceService';
@@ -236,6 +238,8 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
         createLiveMarkdownPlugin(settings.liveMarkdown),
         createTypewriterPlugin(settings.typewriterMode),
         createFocusModePlugin(settings.focusMode),
+        createBionicReadingPlugin(!!settings.bionicReading),
+        createHemingwayPlugin(!!settings.hemingwayMode),
         createWordTriggerPlugin(() => settings.wordTriggers || []),
         createTablePlugin(),
         createSyntaxHighlighting(settings.theme),

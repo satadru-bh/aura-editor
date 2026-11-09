@@ -10,9 +10,13 @@ interface StatusBarProps {
   editorMode?: EditorViewMode;
   liveMarkdown: boolean;
   focusMode?: boolean;
+  bionicReading?: boolean;
+  hemingwayMode?: boolean;
   onOpenStats: () => void;
   onToggleLiveMarkdown: () => void;
   onToggleFocusMode?: () => void;
+  onToggleBionicReading?: () => void;
+  onToggleHemingwayMode?: () => void;
 }
 
 export const StatusBar: React.FC<StatusBarProps> = ({
@@ -23,9 +27,13 @@ export const StatusBar: React.FC<StatusBarProps> = ({
   editorMode,
   liveMarkdown,
   focusMode = false,
+  bionicReading = false,
+  hemingwayMode = false,
   onOpenStats,
   onToggleLiveMarkdown,
   onToggleFocusMode,
+  onToggleBionicReading,
+  onToggleHemingwayMode,
 }) => {
   if (!isVisible) return null;
 
@@ -62,6 +70,42 @@ export const StatusBar: React.FC<StatusBarProps> = ({
             >
               <Sparkles className="w-3 h-3" />
               <span>Focus</span>
+            </button>
+            <span>·</span>
+          </>
+        )}
+
+        {/* Bionic Reading Toggle */}
+        {onToggleBionicReading && (
+          <>
+            <button
+              onClick={onToggleBionicReading}
+              title={bionicReading ? 'Bionic Reading ON - Click to Disable' : 'Bionic Reading OFF - Click to Enable Live Typographic Fixation Bolding'}
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md transition-colors cursor-pointer ${
+                bionicReading
+                  ? 'text-[var(--text-color)] bg-[var(--hover-bg)] font-bold'
+                  : 'hover:bg-[var(--hover-bg)] text-[var(--muted-color)] hover:text-[var(--text-color)]'
+              }`}
+            >
+              <span>Bio</span>
+            </button>
+            <span>·</span>
+          </>
+        )}
+
+        {/* Hemingway Mode Toggle */}
+        {onToggleHemingwayMode && (
+          <>
+            <button
+              onClick={onToggleHemingwayMode}
+              title={hemingwayMode ? 'Hemingway Mode ON (No Backspace/Delete) - Pure Forward Drafting Momentum' : 'Hemingway Mode OFF - Click to Lock Forward Drafting'}
+              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md transition-colors cursor-pointer ${
+                hemingwayMode
+                  ? 'text-[var(--text-color)] bg-[var(--hover-bg)] font-semibold'
+                  : 'hover:bg-[var(--hover-bg)] text-[var(--muted-color)] hover:text-[var(--text-color)]'
+              }`}
+            >
+              <span>Flow</span>
             </button>
             <span>·</span>
           </>

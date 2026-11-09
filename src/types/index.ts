@@ -77,6 +77,8 @@ export interface EditorSettings {
   audio: AudioSettings;
   split: SplitSettings;
   wordTriggers?: WordTrigger[];
+  bionicReading?: boolean;
+  hemingwayMode?: boolean;
 }
 
 export interface EncryptedPayload {

@@ -51,6 +51,8 @@ const DEFAULT_SETTINGS: EditorSettings = {
   typewriterMode: false,
   minimalMode: false,
   focusMode: false,
+  bionicReading: false,
+  hemingwayMode: false,
   showTitleBar: true,
   showTabBar: false, // Hidden by default
   showStatusBar: true,
@@ -2134,9 +2136,13 @@ export const App: React.FC = () => {
         liveMarkdown={settings.liveMarkdown}
         editorMode={settings.editorMode}
         focusMode={settings.focusMode}
+        bionicReading={settings.bionicReading}
+        hemingwayMode={settings.hemingwayMode}
         onOpenStats={() => setIsStatsOpen(true)}
         onToggleLiveMarkdown={handleCycleEditorMode}
         onToggleFocusMode={() => setSettings((s) => ({ ...s, focusMode: !s.focusMode }))}
+        onToggleBionicReading={() => setSettings((s) => ({ ...s, bionicReading: !s.bionicReading }))}
+        onToggleHemingwayMode={() => setSettings((s) => ({ ...s, hemingwayMode: !s.hemingwayMode }))}
       />
 
       {/* Floating Find & Replace */}
@@ -2158,6 +2164,8 @@ export const App: React.FC = () => {
         onSaveFileAs={() => handleSaveFile(true)}
         onLoadShowcase={handleLoadShowcase}
         onToggleFocusMode={() => setSettings((s) => ({ ...s, focusMode: !s.focusMode }))}
+        onToggleBionicReading={() => setSettings((s) => ({ ...s, bionicReading: !s.bionicReading }))}
+        onToggleHemingwayMode={() => setSettings((s) => ({ ...s, hemingwayMode: !s.hemingwayMode }))}
         onToggleMinimalMode={handleToggleMinimalMode}
         onToggleTitleBar={handleToggleTitleBar}
         onToggleTrueFullscreen={toggleTrueFullscreen}

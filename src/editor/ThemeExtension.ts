@@ -554,6 +554,11 @@ export function createEditorTheme(settings: EditorSettings): Extension {
         opacity: '0.6',
       },
 
+      // Bionic Reading Fixations
+      '.cm-bionic-fixation': {
+        fontWeight: '700 !important',
+      },
+
       // Focus Mode (Paragraph Dimming)
       '&.cm-focus-mode .cm-line': {
         opacity: '0.32 !important',

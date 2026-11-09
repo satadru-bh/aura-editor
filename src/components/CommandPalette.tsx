@@ -75,6 +75,8 @@ interface CommandPaletteProps {
   onToggleTypewriter: () => void;
   onToggleStatusBar: () => void;
   onToggleLineNumbers: () => void;
+  onToggleBionicReading?: () => void;
+  onToggleHemingwayMode?: () => void;
   onToggleLiveMarkdown?: () => void;
   editorMode?: EditorViewMode;
   onSetEditorMode?: (mode: EditorViewMode) => void;
@@ -130,6 +132,8 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   onToggleTypewriter,
   onToggleStatusBar,
   onToggleLineNumbers,
+  onToggleBionicReading,
+  onToggleHemingwayMode,
   onToggleLiveMarkdown,
   editorMode,
   onSetEditorMode,
@@ -336,6 +340,24 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
         icon: <Sparkles className="w-4 h-4 text-amber-500" />,
         action: onToggleFocusMode,
         keywords: ['focus', 'dim', 'paragraph', 'distraction free', 'highlight active', 'dimming'],
+      },
+      {
+        id: 'toggle-bionic-reading',
+        title: 'Toggle Bionic Reading (Typographic Anchor Bolding)',
+        category: 'View',
+        shortcut: 'Ctrl+Shift+B',
+        icon: <Sparkles className="w-4 h-4 text-emerald-500" />,
+        action: onToggleBionicReading || (() => {}),
+        keywords: ['bionic', 'reading', 'speed', 'anchor', 'bold', 'typography', 'dyslexia'],
+      },
+      {
+        id: 'toggle-hemingway-mode',
+        title: 'Toggle Hemingway Mode (Forward-Only Drafting Lock)',
+        category: 'Writing Flow',
+        shortcut: 'Ctrl+Shift+H',
+        icon: <Sparkles className="w-4 h-4 text-rose-500" />,
+        action: onToggleHemingwayMode || (() => {}),
+        keywords: ['hemingway', 'drafting', 'forward', 'no backspace', 'momentum', 'lock'],
       },
       {
         id: 'toggle-source-mode',
