@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Aura.md Installer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Window Frame -->
+  <div class="window-frame">
+    <!-- Window Titlebar -->
+    <header class="titlebar">
+      <div class="titlebar-brand">
+        <!-- Aura Emblem Icon -->
+        <svg class="titlebar-icon" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.6" />
+          <path d="M4 12C6.5 9 17.5 9 20 12C17.5 15 6.5 15 4 12Z" stroke="currentColor" stroke-width="1.6" />
+        </svg>
+        <span class="titlebar-title">Aura.md Installer</span>
+      </div>
+
+      <div class="titlebar-controls">
+        <!-- Dark / Light Theme Toggle -->
+        <button type="button" class="win-btn theme-toggle" id="btn-theme-toggle" title="Toggle Light/Dark Theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5" />
+            <line x1="12" y1="1" x2="12" y2="3" />
+            <line x1="12" y1="21" x2="12" y2="23" />
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+            <line x1="1" y1="12" x2="3" y2="12" />
+            <line x1="21" y1="12" x2="23" y2="12" />
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+          </svg>
+        </button>
+
+        <!-- Minimize Window -->
+        <button type="button" class="win-btn" id="btn-minimize" title="Minimize">
+          <svg width="10" height="1" viewBox="0 0 10 1" fill="currentColor">
+            <rect width="10" height="1" />
+          </svg>
+        </button>
+
+        <!-- Close Window -->
+        <button type="button" class="win-btn close" id="btn-close" title="Close">
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+            <path d="M1 0L0 1L4 5L0 9L1 10L5 6L9 10L10 9L6 5L10 1L9 0L5 4L1 0Z" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Container -->
+    <div class="app-body">
+      <!-- Left Sidebar with Vertical Stepper -->
+      <aside class="sidebar">
+        <nav class="stepper" aria-label="Installation Progress">
+          <div class="stepper-line"></div>
+          
+          <div class="step-item active" data-step="0">
+            <span class="step-indicator">
+              <span class="step-dot"></span>
+            </span>
+            <span class="step-label">Welcome</span>
+          </div>
+
+          <div class="step-item" data-step="1">
+            <span class="step-indicator">
+              <span class="step-dot"></span>
+            </span>
+            <span class="step-label">Install Location</span>
+          </div>
+
+          <div class="step-item" data-step="2">
+            <span class="step-indicator">
+              <span class="step-dot"></span>
+            </span>
+            <span class="step-label">Options</span>
+          </div>
+
+          <div class="step-item" data-step="3">
+            <span class="step-indicator">
+              <span class="step-dot"></span>
+            </span>
+            <span class="step-label">Installing</span>
+          </div>
+
+          <div class="step-item" data-step="4">
+            <span class="step-indicator">
+              <span class="step-dot"></span>
+            </span>
+            <span class="step-label">Complete</span>
+          </div>
+        </nav>
+      </aside>
+
+      <!-- Right Main Panel -->
+      <main class="main-panel">
+        <!-- Screen 0: Welcome -->
+        <section class="screen active" id="screen-welcome">
+          <div class="screen-content center-content">
+            <div class="hero-logo-box">
+              <img src="logo.png" alt="Aura Logo" class="hero-logo" />
+            </div>
+            <h1 class="hero-title">Aura.md</h1>
+            <p class="hero-tagline">A MINIMAL TEXT EDITOR</p>
+            <p class="hero-desc">
+              A focused, minimal text editor for writing, coding, and everything in between.
+            </p>
+          </div>
+        </section>
+
+        <!-- Screen 1: Install Location -->
+        <section class="screen" id="screen-location">
+          <div class="screen-content">
+            <div class="section-header">
+              <h2 class="section-title">Install Location</h2>
+              <p class="section-desc">Select destination folder where Aura.md will be installed.</p>
+            </div>
+
+            <div class="form-card">
+              <label class="form-label" for="input-install-path">Destination Folder</label>
+              <div class="path-row">
+                <input type="text" id="input-install-path" class="path-input" spellcheck="false" />
+                <button type="button" id="btn-browse-folder" class="btn-secondary">Browse...</button>
+              </div>
+            </div>
+
+            <div class="info-card">
+              <div class="info-item">
+                <span class="info-title">Space Required:</span>
+                <span class="info-value">~180 MB</span>
+              </div>
+              <div class="info-divider"></div>
+              <div class="info-item">
+                <span class="info-title">Architecture:</span>
+                <span class="info-value">Windows x64 Native</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Screen 2: Options -->
+        <section class="screen" id="screen-options">
+          <div class="screen-content">
+            <div class="section-header">
+              <h2 class="section-title">Options</h2>
+              <p class="section-desc">Configure desktop shortcuts and shell integrations.</p>
+            </div>
+
+            <div class="options-list">
+              <label class="option-row">
+                <input type="checkbox" id="chk-desktop" checked />
+                <span class="custom-check">
+                  <svg viewBox="0 0 12 12" fill="none">
+                    <polyline points="2.5 6 5 8.5 9.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </span>
+                <div class="option-info">
+                  <span class="option-title">Create Desktop shortcut</span>
+                  <span class="option-subtitle">Quick launch icon on your Windows desktop</span>
+                </div>
+              </label>
+
+              <label class="option-row">
+                <input type="checkbox" id="chk-startmenu" checked />
+                <span class="custom-check">
+                  <svg viewBox="0 0 12 12" fill="none">
+                    <polyline points="2.5 6 5 8.5 9.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </span>
+                <div class="option-info">
+                  <span class="option-title">Create Start Menu shortcut</span>
+                  <span class="option-subtitle">Pin to Windows Start search and applications list</span>
+                </div>
+              </label>
+
+              <label class="option-row">
+                <input type="checkbox" id="chk-assoc" checked />
+                <span class="custom-check">
+                  <svg viewBox="0 0 12 12" fill="none">
+                    <polyline points="2.5 6 5 8.5 9.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </span>
+                <div class="option-info">
+                  <span class="option-title">Associate Markdown files (.md, .markdown)</span>
+                  <span class="option-subtitle">Open Markdown files with Aura.md by default</span>
+                </div>
+              </label>
+
+              <label class="option-row">
+                <input type="checkbox" id="chk-launch" checked />
+                <span class="custom-check">
+                  <svg viewBox="0 0 12 12" fill="none">
+                    <polyline points="2.5 6 5 8.5 9.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </span>
+                <div class="option-info">
+                  <span class="option-title">Launch Aura.md after install</span>
+                  <span class="option-subtitle">Open editor immediately once setup finishes</span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </section>
+
+        <!-- Screen 3: Installing -->
+        <section class="screen" id="screen-installing">
+          <div class="screen-content center-content">
+            <div class="progress-hero">
+              <h2 class="section-title" id="install-title">Installing Aura.md...</h2>
+              <p class="section-desc" id="install-detail">Extracting application core and assets...</p>
+
+              <!-- Minimal Progress Bar -->
+              <div class="progress-container">
+                <div class="progress-bar-track">
+                  <div class="progress-bar-fill" id="progress-bar" style="width: 0%;"></div>
+                </div>
+                <div class="progress-stats">
+                  <span id="progress-percent" class="progress-percent">0%</span>
+                  <span class="progress-badge">Optimizing</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Screen 4: Complete -->
+        <section class="screen" id="screen-complete">
+          <div class="screen-content center-content">
+            <div class="complete-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <h2 class="hero-title" style="font-size: 26px; margin-top: 12px;">Setup Complete</h2>
+            <p class="hero-desc" style="max-width: 360px; margin-top: 6px;">
+              Aura.md is installed and ready to elevate your writing experience.
+            </p>
+
+            <div class="complete-actions">
+              <button type="button" id="btn-open-folder" class="btn-secondary">
+                Open Install Folder
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Footer Action Buttons -->
+        <footer class="footer-bar">
+          <button type="button" id="btn-back" class="btn-secondary hidden">
+            ← Back
+          </button>
+          <div class="footer-spacer"></div>
+          <button type="button" id="btn-cancel" class="btn-secondary">
+            Cancel
+          </button>
+          <button type="button" id="btn-next" class="btn-primary">
+            Next →
+          </button>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script src="installer.js"></script>
+</body>
+</html>

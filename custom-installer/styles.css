@@ -1,0 +1,673 @@
+/* ==========================================================================
+   Aura.md Custom Installer - Windows 11 Minimal Luxury Theme
+   ========================================================================== */
+
+:root {
+  /* Light Theme (Default - Reference Mockup) */
+  --bg-color: #FAF9F8;
+  --surface-color: #FFFFFF;
+  --text-primary: #181716;
+  --text-secondary: #767471;
+  --border-color: #E6E5E2;
+  --border-hover: #C8C7C4;
+  --btn-primary-bg: #121212;
+  --btn-primary-text: #FFFFFF;
+  --btn-primary-hover: #262626;
+  --btn-secondary-bg: #FFFFFF;
+  --btn-secondary-text: #181716;
+  --btn-secondary-border: #D8D7D3;
+  --btn-secondary-hover: #F2F1EE;
+  --stepper-line: #E5E4E0;
+  --stepper-dot-inactive: #D0CFCA;
+  --stepper-dot-active: #181716;
+  --window-shadow: 0 16px 48px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="dark"] {
+  /* Dark Theme */
+  --bg-color: #121212;
+  --surface-color: #1A1A1A;
+  --text-primary: #EDEDED;
+  --text-secondary: #8E8E8E;
+  --border-color: #262626;
+  --border-hover: #3E3E3E;
+  --btn-primary-bg: #FFFFFF;
+  --btn-primary-text: #121212;
+  --btn-primary-hover: #E2E2E2;
+  --btn-secondary-bg: #1A1A1A;
+  --btn-secondary-text: #EDEDED;
+  --btn-secondary-border: #303030;
+  --btn-secondary-hover: #262626;
+  --stepper-line: #262626;
+  --stepper-dot-inactive: #3E3E3E;
+  --stepper-dot-active: #FFFFFF;
+  --window-shadow: 0 24px 64px rgba(0, 0, 0, 0.6), 0 2px 10px rgba(0, 0, 0, 0.4);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: transparent;
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI Variable Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  user-select: none;
+  -webkit-user-select: none;
+  color: var(--text-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ==========================================================================
+   Window Frame & Chrome
+   ========================================================================== */
+
+.window-frame {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: var(--window-shadow);
+}
+
+.titlebar {
+  height: 42px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px 0 16px;
+  background-color: var(--bg-color);
+  border-bottom: 1px solid transparent;
+  -webkit-app-region: drag;
+  flex-shrink: 0;
+}
+
+.titlebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-primary);
+}
+
+.titlebar-icon {
+  width: 16px;
+  height: 16px;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+
+.titlebar-title {
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  opacity: 0.9;
+}
+
+.titlebar-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.win-btn {
+  width: 32px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.win-btn:hover {
+  background-color: rgba(125, 125, 125, 0.12);
+  color: var(--text-primary);
+}
+
+.win-btn.close:hover {
+  background-color: #E81123;
+  color: #FFFFFF;
+}
+
+/* Theme Toggle Button */
+.win-btn.theme-toggle {
+  width: 30px;
+  height: 28px;
+  margin-right: 4px;
+}
+
+.win-btn.theme-toggle svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Sun / Moon visibility based on active theme */
+:root .icon-sun { display: none; }
+:root .icon-moon { display: block; }
+
+[data-theme="dark"] .icon-sun { display: block; }
+[data-theme="dark"] .icon-moon { display: none; }
+
+/* ==========================================================================
+   App Body (Sidebar + Content Split)
+   ========================================================================== */
+
+.app-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  height: calc(100vh - 42px);
+}
+
+/* Left Stepper Sidebar */
+.sidebar {
+  width: 195px;
+  flex-shrink: 0;
+  padding: 44px 20px 32px 32px;
+  border-right: 1px solid var(--border-color);
+  background-color: var(--bg-color);
+  position: relative;
+}
+
+.stepper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+
+.stepper-line {
+  position: absolute;
+  top: 9px;
+  bottom: 9px;
+  left: 6px;
+  width: 1px;
+  background-color: var(--stepper-line);
+  z-index: 1;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  z-index: 2;
+  transition: all 0.2s ease;
+}
+
+.step-indicator {
+  width: 13px;
+  height: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-color);
+  border-radius: 50%;
+}
+
+.step-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid var(--stepper-dot-inactive);
+  background-color: var(--bg-color);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.step-label {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-secondary);
+  transition: color 0.2s ease, font-weight 0.2s ease;
+}
+
+/* Active Step */
+.step-item.active .step-dot {
+  width: 9px;
+  height: 9px;
+  border: none;
+  background-color: var(--stepper-dot-active);
+}
+
+.step-item.active .step-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Completed Step */
+.step-item.completed .step-dot {
+  width: 8px;
+  height: 8px;
+  border: none;
+  background-color: var(--text-secondary);
+}
+
+.step-item.completed .step-label {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   Right Main Panel & Screens
+   ========================================================================== */
+
+.main-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--bg-color);
+}
+
+.screen {
+  flex: 1;
+  display: none;
+  padding: 32px 42px 20px 42px;
+  overflow-y: auto;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.screen.active {
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.screen-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.screen-content.center-content {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Hero Section (Welcome Screen) */
+.hero-logo-box {
+  width: 114px;
+  height: 114px;
+  border-radius: 28px;
+  background: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.16);
+  margin-bottom: 22px;
+  padding: 10px;
+}
+
+.hero-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 20px;
+}
+
+.hero-title {
+  font-size: 38px;
+  font-weight: 350;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  line-height: 1.15;
+  margin-bottom: 2px;
+}
+
+.hero-tagline {
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-top: 6px;
+  margin-bottom: 22px;
+  opacity: 0.88;
+}
+
+.hero-desc {
+  font-size: 13.5px;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  max-width: 390px;
+  letter-spacing: -0.005em;
+}
+
+/* Section Headers */
+.section-header {
+  margin-bottom: 22px;
+}
+
+.section-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text-primary);
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+}
+
+.section-desc {
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  margin-top: 4px;
+}
+
+/* Location Card & Inputs */
+.form-card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  margin-bottom: 8px;
+}
+
+.path-row {
+  display: flex;
+  gap: 8px;
+}
+
+.path-input {
+  flex: 1;
+  height: 36px;
+  padding: 0 12px;
+  background-color: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 7px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.path-input:focus {
+  border-color: var(--border-hover);
+}
+
+.info-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  background-color: rgba(125, 125, 125, 0.05);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.info-item {
+  display: flex;
+  gap: 6px;
+}
+
+.info-title {
+  color: var(--text-secondary);
+}
+
+.info-value {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.info-divider {
+  width: 1px;
+  height: 12px;
+  background-color: var(--border-color);
+}
+
+/* Options Screen Checkboxes */
+.options-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.option-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.option-row:hover {
+  border-color: var(--border-hover);
+}
+
+.option-row input[type="checkbox"] {
+  display: none;
+}
+
+.custom-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1.5px solid var(--border-hover);
+  background-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.custom-check svg {
+  width: 11px;
+  height: 11px;
+  color: #FFFFFF;
+  opacity: 0;
+  transform: scale(0.6);
+  transition: all 0.15s ease;
+}
+
+.option-row input[type="checkbox"]:checked + .custom-check {
+  background-color: var(--btn-primary-bg);
+  border-color: var(--btn-primary-bg);
+}
+
+.option-row input[type="checkbox"]:checked + .custom-check svg {
+  opacity: 1;
+  transform: scale(1);
+  color: var(--btn-primary-text);
+}
+
+.option-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.option-title {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.option-subtitle {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Progress / Installing Screen */
+.progress-hero {
+  max-width: 380px;
+  width: 100%;
+}
+
+.progress-container {
+  margin-top: 28px;
+  width: 100%;
+}
+
+.progress-bar-track {
+  width: 100%;
+  height: 5px;
+  background-color: var(--border-color);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background-color: var(--text-primary);
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.progress-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.progress-percent {
+  font-family: inherit;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.progress-badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+}
+
+/* Complete Screen */
+.complete-badge {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background-color: var(--surface-color);
+  border: 1.5px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.complete-badge svg {
+  width: 24px;
+  height: 24px;
+}
+
+.complete-actions {
+  margin-top: 24px;
+  display: flex;
+  gap: 10px;
+}
+
+/* ==========================================================================
+   Footer Action Bar
+   ========================================================================== */
+
+.footer-bar {
+  height: 64px;
+  padding: 0 42px 24px 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: var(--bg-color);
+  flex-shrink: 0;
+}
+
+.footer-spacer {
+  flex: 1;
+}
+
+/* Button Styles */
+.btn-primary {
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 8px;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: none;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-primary:hover {
+  background-color: var(--btn-primary-hover);
+  transform: translateY(-0.5px);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border: 1px solid var(--btn-secondary-border);
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover {
+  background-color: var(--btn-secondary-hover);
+  border-color: var(--border-hover);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
+}
+
+.hidden {
+  display: none !important;
+}

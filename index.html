@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="./logo.png" />
+    <link rel="apple-touch-icon" href="./logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Aura — Ultra-Minimal Editor</title>
+    <meta name="description" content="The world's best ultra-minimal live Markdown text editor." />
+    <!-- Asynchronous Preload for Typography & KaTeX to accelerate first paint by 500ms+ -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Literata:ital,opsz,wght@0,7..72,200..900;1,7..72,200..900&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&family=Literata:ital,opsz,wght@0,7..72,200..900&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&display=swap"></noscript>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" crossorigin="anonymous">
+    <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.21/dist/katex.min.css" crossorigin="anonymous"></noscript>
+  </head>
+  <body class="overflow-hidden select-none bg-aura-dark-bg text-aura-dark-text antialiased">
+    <div id="root" class="h-screen w-screen overflow-hidden flex flex-col">
+      <div id="aura-initial-splash" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#141414;z-index:9999;font-family:system-ui,-apple-system,sans-serif;">
+        <img src="./logo.png" alt="Aura Logo" style="width:64px;height:64px;object-fit:contain;border-radius:18px;box-shadow:0 8px 24px rgba(0,0,0,0.4);" />
+        <div style="margin-top:16px;font-size:11px;font-weight:600;letter-spacing:0.25em;text-transform:uppercase;color:#ECECEC;opacity:0.8;">
+          Aura
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

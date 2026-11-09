@@ -1,0 +1,27 @@
+{
+  "appId": "com.aura.editor.installer",
+  "productName": "Aura Editor Setup",
+  "directories": {
+    "app": "custom-installer",
+    "output": "installer-out"
+  },
+  "files": [
+    "**/*"
+  ],
+  "extraResources": [
+    {
+      "from": "installer-out/win-unpacked",
+      "to": "app-payload"
+    }
+  ],
+  "win": {
+    "icon": "build/icon.ico",
+    "target": [
+      {
+        "target": "portable",
+        "arch": ["x64"]
+      }
+    ],
+    "artifactName": "Aura Editor Setup ${version}.${ext}"
+  }
+}

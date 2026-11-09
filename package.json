@@ -1,0 +1,136 @@
+{
+  "name": "aura-editor",
+  "version": "1.0.0",
+  "description": "The world's best ultra-minimal live Markdown text editor",
+  "type": "module",
+  "private": true,
+  "author": "Aura Team",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/satadru/aura-editor.git"
+  },
+  "main": "electron/main.cjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "generate:installer-assets": "electron scripts/generate-installer-assets.cjs",
+    "electron:dev": "concurrently \"vite\" \"cross-env ELECTRON_DEV=1 electron .\"",
+    "electron:build": "npm run generate:installer-assets && npm run build && electron-builder",
+    "package:win": "npm run build && electron-packager . \"Aura Editor\" --platform=win32 --arch=x64 --out=dist-win --overwrite --prune=true",
+    "installer:win": "npm run generate:installer-assets && npm run build && npx electron-builder --win nsis --config.directories.output=installer-out",
+    "installer:gui": "electron custom-installer/main.cjs",
+    "installer:exe": "npx electron-builder --project custom-installer"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.18.4",
+    "@codemirror/commands": "^6.8.0",
+    "@codemirror/lang-markdown": "^6.3.3",
+    "@codemirror/language": "^6.10.8",
+    "@codemirror/language-data": "^6.5.2",
+    "@codemirror/lint": "^6.8.4",
+    "@codemirror/search": "^6.5.8",
+    "@codemirror/state": "^6.5.2",
+    "@codemirror/theme-one-dark": "^6.1.3",
+    "@codemirror/view": "^6.36.4",
+    "@lezer/common": "^1.2.3",
+    "@lezer/highlight": "^1.2.1",
+    "@lezer/markdown": "^1.4.3",
+    "canvas-confetti": "^1.9.4",
+    "clsx": "^2.1.1",
+    "electron-updater": "^6.8.11",
+    "fuse.js": "^7.1.0",
+    "highlight.js": "^11.12.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "katex": "^0.16.21",
+    "lucide-react": "^1.16.0",
+    "marked": "^18.0.11",
+    "mermaid": "^11.17.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "tailwind-merge": "^3.0.2"
+  },
+  "devDependencies": {
+    "@electron/packager": "^20.3.0",
+    "@types/canvas-confetti": "^1.9.0",
+    "@types/katex": "^0.16.7",
+    "@types/node": "^22.13.9",
+    "@types/react": "^19.0.10",
+    "@types/react-dom": "^19.0.4",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.21",
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "electron": "^35.0.0",
+    "electron-builder": "^26.15.3",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.8.2",
+    "vite": "^6.2.0",
+    "vitest": "^3.0.7"
+  },
+  "build": {
+    "appId": "com.aura.editor",
+    "productName": "Aura Editor",
+    "publish": {
+      "provider": "github",
+      "owner": "satadru",
+      "repo": "aura-editor"
+    },
+    "directories": {
+      "output": "installer-out"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "build/installerIcon.ico",
+      "uninstallerIcon": "build/uninstallerIcon.ico",
+      "installerHeader": "build/installerHeader.bmp",
+      "installerHeaderIcon": "build/installerHeaderIcon.ico",
+      "installerSidebar": "build/installerSidebar.bmp",
+      "uninstallerSidebar": "build/uninstallerSidebar.bmp",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Aura Editor"
+    },
+    "fileAssociations": [
+      {
+        "ext": "md",
+        "name": "Markdown Document",
+        "description": "Markdown Document",
+        "role": "Editor"
+      },
+      {
+        "ext": "markdown",
+        "name": "Markdown Document",
+        "description": "Markdown Document",
+        "role": "Editor"
+      },
+      {
+        "ext": "txt",
+        "name": "Text Document",
+        "description": "Plain Text Document",
+        "role": "Editor"
+      }
+    ]
+  }
+}

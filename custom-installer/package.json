@@ -1,0 +1,50 @@
+{
+  "name": "aura-installer",
+  "version": "1.0.0",
+  "description": "Custom Installer for Aura Editor",
+  "main": "main.cjs",
+  "private": true,
+  "author": "Aura Team",
+  "scripts": {
+    "start": "electron ."
+  },
+  "build": {
+    "electronVersion": "35.7.5",
+    "compression": "normal",
+    "appId": "com.aura.editor.installer",
+    "productName": "Aura Setup",
+    "directories": {
+      "output": "../dist-installer"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "index.html",
+      "styles.css",
+      "installer.js",
+      "logo.png"
+    ],
+    "extraResources": [
+      {
+        "from": "../installer-out/win-unpacked",
+        "to": "app-payload"
+      }
+    ],
+    "win": {
+      "icon": "../build/installerIcon.ico",
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Aura-Setup.${ext}"
+    },
+    "portable": {
+      "artifactName": "Aura-Setup.exe",
+      "requestExecutionLevel": "user"
+    }
+  }
+}

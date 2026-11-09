@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Production / Distribution builds
+dist/
+dist-installer/
+dist-win/
+installer-out/
+build/
+custom-installer/dist/
+custom-installer/installer-out/
+*.exe
+*.zip
+.env*
+.env.local
+
+# Graphify output
+graphify-out/
+
+# Logs
+*.log
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
