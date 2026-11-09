@@ -520,6 +520,7 @@ export const App: React.FC = () => {
         return f;
       });
 
+      filesRef.current = filesWithDrafts;
       setFiles(filesWithDrafts);
 
       const savedActiveId = fileSystem.getActiveFileId();
@@ -542,7 +543,7 @@ export const App: React.FC = () => {
         return valid;
       });
 
-      // Check if Electron was launched with an initial file from disk
+      // Check if Electron was launched with an initial file from disk (e.g. double click .md or .txt)
       if (typeof window !== 'undefined' && (window as any).electronAPI?.getInitialFile) {
         try {
           const initFile = await (window as any).electronAPI.getInitialFile();
@@ -614,6 +615,22 @@ export const App: React.FC = () => {
           setExternalConflict({ filePath: data.filePath, fileName: currentFile.name });
         }
       });
+      return () => {
+        if (typeof unsub === 'function') unsub();
+      };
+    }
+  }, []);
+
+  // Listen for File Open events from Electron (e.g. double clicking .md or .txt while app is open)
+  useEffect(() => {
+    if (typeof window !== 'undefined' && (window as any).electronAPI?.onFileOpened) {
+      const unsub = (window as any).electronAPI.onFileOpened(
+        (data: { fileName: string; filePath: string; content: string }) => {
+          if (data && data.fileName && typeof data.content === 'string') {
+            openFileItemRef.current?.(data.fileName, data.content, data.filePath);
+          }
+        }
+      );
       return () => {
         if (typeof unsub === 'function') unsub();
       };

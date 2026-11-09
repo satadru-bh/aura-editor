@@ -540,11 +540,28 @@ ipcMain.handle('installer:startInstall', async (event, options) => {
     if (associateFiles) {
       sendProgress(91, 'Configuring Windows file associations...');
       const regCmds = [
+        // .md & .markdown ProgId
         `reg add "HKCU\\Software\\Classes\\.md" /ve /d "AuraEditor.md" /f`,
+        `reg add "HKCU\\Software\\Classes\\.md\\OpenWithProgids" /v "AuraEditor.md" /t REG_NONE /f`,
         `reg add "HKCU\\Software\\Classes\\.markdown" /ve /d "AuraEditor.md" /f`,
+        `reg add "HKCU\\Software\\Classes\\.markdown\\OpenWithProgids" /v "AuraEditor.md" /t REG_NONE /f`,
+        // .txt ProgId
+        `reg add "HKCU\\Software\\Classes\\.txt\\OpenWithProgids" /v "AuraEditor.txt" /t REG_NONE /f`,
+        `reg add "HKCU\\Software\\Classes\\AuraEditor.txt" /ve /d "Text Document" /f`,
+        `reg add "HKCU\\Software\\Classes\\AuraEditor.txt\\DefaultIcon" /ve /d "${exePath},0" /f`,
+        `reg add "HKCU\\Software\\Classes\\AuraEditor.txt\\shell\\open\\command" /ve /t REG_SZ /d "\\"${exePath}\\" \\"%1\\"" /f`,
+        // AuraEditor.md ProgId
         `reg add "HKCU\\Software\\Classes\\AuraEditor.md" /ve /d "Markdown Document" /f`,
         `reg add "HKCU\\Software\\Classes\\AuraEditor.md\\DefaultIcon" /ve /d "${exePath},0" /f`,
-        `reg add "HKCU\\Software\\Classes\\AuraEditor.md\\shell\\open\\command" /ve /d "\\"${exePath}\\" \\"%%1\\"" /f`,
+        `reg add "HKCU\\Software\\Classes\\AuraEditor.md\\shell\\open\\command" /ve /t REG_SZ /d "\\"${exePath}\\" \\"%1\\"" /f`,
+        // Applications\\Aura Editor.exe (Required for Windows "Open With" and Settings Default App)
+        `reg add "HKCU\\Software\\Classes\\Applications\\Aura Editor.exe" /v "FriendlyAppName" /d "Aura Editor" /f`,
+        `reg add "HKCU\\Software\\Classes\\Applications\\Aura Editor.exe\\DefaultIcon" /ve /d "${exePath},0" /f`,
+        `reg add "HKCU\\Software\\Classes\\Applications\\Aura Editor.exe\\shell\\open\\command" /ve /t REG_SZ /d "\\"${exePath}\\" \\"%1\\"" /f`,
+        `reg add "HKCU\\Software\\Classes\\Applications\\Aura Editor.exe\\SupportedTypes" /v ".md" /t REG_SZ /d "" /f`,
+        `reg add "HKCU\\Software\\Classes\\Applications\\Aura Editor.exe\\SupportedTypes" /v ".markdown" /t REG_SZ /d "" /f`,
+        `reg add "HKCU\\Software\\Classes\\Applications\\Aura Editor.exe\\SupportedTypes" /v ".txt" /t REG_SZ /d "" /f`,
+        `reg add "HKCU\\Software\\Classes\\Applications\\Aura Editor.exe\\SupportedTypes" /v ".text" /t REG_SZ /d "" /f`,
       ];
       for (const cmd of regCmds) {
         await runRegCommand(cmd);
@@ -562,8 +579,11 @@ del "%USERPROFILE%\\OneDrive\\Desktop\\Aura Editor.lnk" >nul 2>&1
 del "%APPDATA%\\Microsoft\\Windows\\Start Menu\\Programs\\Aura Editor.lnk" >nul 2>&1
 reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AuraEditor" /f >nul 2>&1
 reg delete "HKCU\\Software\\Classes\\AuraEditor.md" /f >nul 2>&1
+reg delete "HKCU\\Software\\Classes\\AuraEditor.txt" /f >nul 2>&1
+reg delete "HKCU\\Software\\Classes\\Applications\\Aura Editor.exe" /f >nul 2>&1
 reg delete "HKCU\\Software\\Classes\\.md" /f >nul 2>&1
 reg delete "HKCU\\Software\\Classes\\.markdown" /f >nul 2>&1
+reg delete "HKCU\\Software\\Classes\\.txt\\OpenWithProgids" /v "AuraEditor.txt" /f >nul 2>&1
 echo Done.
 start "" cmd /c "timeout /t 1 >nul & rmdir /s /q \\"%~dp0\\""
 exit
@@ -632,8 +652,11 @@ ipcMain.handle('installer:uninstall', async (_event, targetDir) => {
     sendProgress(60, 'Cleaning Windows registry entries...', 'Removing file associations and uninstaller...');
     await runRegCommand('reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\AuraEditor" /f');
     await runRegCommand('reg delete "HKCU\\Software\\Classes\\AuraEditor.md" /f');
+    await runRegCommand('reg delete "HKCU\\Software\\Classes\\AuraEditor.txt" /f');
+    await runRegCommand('reg delete "HKCU\\Software\\Classes\\Applications\\Aura Editor.exe" /f');
     await runRegCommand('reg delete "HKCU\\Software\\Classes\\.md" /f');
     await runRegCommand('reg delete "HKCU\\Software\\Classes\\.markdown" /f');
+    await runRegCommand('reg delete "HKCU\\Software\\Classes\\.txt\\OpenWithProgids" /v "AuraEditor.txt" /f');
 
     sendProgress(80, 'Removing application files...', targetDir);
     if (targetDir && fs.existsSync(targetDir)) {
