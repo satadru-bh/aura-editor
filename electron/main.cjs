@@ -19,7 +19,7 @@ function extractFilePathFromArgs(args, workingDir = process.cwd()) {
       if (fsSync.existsSync(resolved) && fsSync.statSync(resolved).isFile()) {
         return resolved;
       }
-    } catch (e) {}
+    } catch (e) { }
   }
   return null;
 }
@@ -89,7 +89,7 @@ function getWindowState() {
         return { width: data.width, height: data.height, isMaximized: !!data.isMaximized };
       }
     }
-  } catch (e) {}
+  } catch (e) { }
   return { width: 1080, height: 780, isMaximized: false };
 }
 
@@ -112,7 +112,7 @@ function saveWindowState() {
       const fsSync = require('fs');
       const stateFile = path.join(app.getPath('userData'), 'window-state.json');
       fsSync.writeFileSync(stateFile, JSON.stringify(state), 'utf-8');
-    } catch (e) {}
+    } catch (e) { }
   }, 400);
 }
 
@@ -125,12 +125,12 @@ function createWindow() {
   const iconPath = fsSync.existsSync(logoPngPath)
     ? logoPngPath
     : fsSync.existsSync(distLogoPath)
-    ? distLogoPath
-    : fsSync.existsSync(buildIcoPath)
-    ? buildIcoPath
-    : fsSync.existsSync(buildPngPath)
-    ? buildPngPath
-    : path.join(__dirname, '../public/aura-icon.svg');
+      ? distLogoPath
+      : fsSync.existsSync(buildIcoPath)
+        ? buildIcoPath
+        : fsSync.existsSync(buildPngPath)
+          ? buildPngPath
+          : path.join(__dirname, '../public/aura-icon.svg');
 
   const winState = getWindowState();
 
@@ -313,7 +313,7 @@ ipcMain.handle('fs:renameFile', async (_event, oldPath, newName) => {
         if (wasWatched) {
           try {
             activeFileWatchers.get(oldPath).close();
-          } catch (e) {}
+          } catch (e) { }
           activeFileWatchers.delete(oldPath);
         }
         await fs.rename(oldPath, newPath);
@@ -333,7 +333,7 @@ ipcMain.handle('fs:watchFile', (_event, filePath) => {
   if (activeFileWatchers.has(filePath)) {
     try {
       activeFileWatchers.get(filePath).close();
-    } catch (e) {}
+    } catch (e) { }
     activeFileWatchers.delete(filePath);
   }
 
@@ -357,7 +357,7 @@ ipcMain.handle('fs:watchFile', (_event, filePath) => {
               mtime: stats.mtimeMs,
             });
           }
-        } catch (e) {}
+        } catch (e) { }
       }, 350);
     });
 
@@ -373,7 +373,7 @@ ipcMain.handle('fs:unwatchFile', (_event, filePath) => {
   if (filePath && activeFileWatchers.has(filePath)) {
     try {
       activeFileWatchers.get(filePath).close();
-    } catch (e) {}
+    } catch (e) { }
     activeFileWatchers.delete(filePath);
   }
   return { success: true };
@@ -621,7 +621,7 @@ ipcMain.handle('export:pdf', async (_event, htmlContent) => {
     }
     // Clean up temp file
     if (tmpFile) {
-      fs.unlink(tmpFile).catch(() => {});
+      fs.unlink(tmpFile).catch(() => { });
     }
   }
 });

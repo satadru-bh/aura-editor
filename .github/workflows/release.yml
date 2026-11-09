@@ -38,8 +38,20 @@ jobs:
       - name: Generate Installer Assets
         run: npm run generate:installer-assets
 
-      - name: Build and Publish Windows Installer
+      - name: Build and Publish Windows App & Zip Package
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --win nsis --publish always
+        run: npx electron-builder --win nsis zip --publish always
+
+      - name: Build Standalone Custom Installer
+        run: npx electron-builder --project custom-installer
+
+      - name: Upload Standalone Custom Installer to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+        with:
+          files: |
+            dist-installer/Aura-Setup.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

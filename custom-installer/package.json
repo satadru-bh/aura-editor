@@ -24,17 +24,11 @@
       "installer.js",
       "logo.png"
     ],
-    "extraResources": [
-      {
-        "from": "../installer-out/win-unpacked",
-        "to": "app-payload"
-      }
-    ],
     "win": {
       "icon": "../build/installerIcon.ico",
       "target": [
         {
-          "target": "portable",
+          "target": "nsis",
           "arch": [
             "x64"
           ]
@@ -42,9 +36,12 @@
       ],
       "artifactName": "Aura-Setup.${ext}"
     },
-    "portable": {
-      "artifactName": "Aura-Setup.exe",
-      "requestExecutionLevel": "user"
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
+      "artifactName": "Aura-Setup.exe"
     }
   }
 }

@@ -1,6 +1,8 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const https = require('https');
+const http = require('http');
 const rawFs = process.versions.electron ? require('original-fs') : require('fs');
 const rawFsPromises = rawFs.promises;
 const fsPromises = rawFsPromises;
@@ -68,6 +70,203 @@ ipcMain.handle('installer:browseFolder', async (_event, defaultPath) => {
   return defaultPath;
 });
 
+// Helper: Resolve GitHub repo name
+function getRepoName() {
+  if (process.env.AURA_GITHUB_REPO) return process.env.AURA_GITHUB_REPO;
+  try {
+    const pkgPath = path.resolve(__dirname, '../package.json');
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+      if (pkg.repository?.url) {
+        const match = pkg.repository.url.match(/github\.com[/:]([^/]+\/[^/.]+)/);
+        if (match) return match[1].replace(/\.git$/, '');
+      }
+      if (pkg.build?.publish?.owner && pkg.build?.publish?.repo) {
+        return `${pkg.build.publish.owner}/${pkg.build.publish.repo}`;
+      }
+    }
+  } catch (e) {}
+  return 'satadru/aura-editor';
+}
+
+// Helper: Fetch latest release asset info from GitHub Releases
+function getLatestReleaseAsset(repo) {
+  return new Promise((resolve, reject) => {
+    const url = `https://api.github.com/repos/${repo}/releases/latest`;
+    const req = https.get(
+      url,
+      {
+        headers: {
+          'User-Agent': 'Aura-Custom-Installer/1.0',
+          'Accept': 'application/vnd.github.v3+json',
+        },
+        timeout: 12000,
+      },
+      (res) => {
+        if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
+          return getLatestReleaseAsset(repo).then(resolve).catch(reject);
+        }
+        if (res.statusCode !== 200) {
+          return reject(new Error(`GitHub API returned HTTP ${res.statusCode} for ${url}`));
+        }
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => {
+          try {
+            const release = JSON.parse(data);
+            const assets = release.assets || [];
+            // Look for windows zip asset (e.g. Aura-Editor-1.0.0-win-x64.zip or *.zip)
+            const zipAsset =
+              assets.find(
+                (a) =>
+                  a.name.toLowerCase().endsWith('.zip') &&
+                  (a.name.toLowerCase().includes('win') || a.name.toLowerCase().includes('aura'))
+              ) || assets.find((a) => a.name.toLowerCase().endsWith('.zip'));
+
+            if (!zipAsset) {
+              return reject(
+                new Error(
+                  `No Windows package (.zip) found in GitHub release ${release.tag_name || ''}. Available assets: ${assets.map((a) => a.name).join(', ') || 'none'}`
+                )
+              );
+            }
+
+            resolve({
+              version: release.tag_name,
+              name: zipAsset.name,
+              downloadUrl: zipAsset.browser_download_url,
+              size: zipAsset.size || 0,
+            });
+          } catch (e) {
+            reject(new Error(`Failed to parse GitHub release data: ${e.message}`));
+          }
+        });
+      }
+    );
+    req.on('error', reject);
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('GitHub connection timed out.'));
+    });
+  });
+}
+
+// Helper: Download file with redirect handling and streaming progress
+function downloadFile(url, destPath, onProgress) {
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(destPath);
+
+    function fetchUrl(currentUrl, redirects = 0) {
+      if (redirects > 10) {
+        file.close();
+        return reject(new Error('Too many HTTP redirects'));
+      }
+
+      const client = currentUrl.startsWith('https') ? https : http;
+      const req = client.get(
+        currentUrl,
+        {
+          headers: {
+            'User-Agent': 'Aura-Custom-Installer/1.0',
+            'Accept': 'application/octet-stream',
+          },
+          timeout: 45000,
+        },
+        (res) => {
+          if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
+            return fetchUrl(res.headers.location, redirects + 1);
+          }
+
+          if (res.statusCode !== 200) {
+            file.close();
+            return reject(new Error(`Download failed with HTTP ${res.statusCode}`));
+          }
+
+          const totalBytes = parseInt(res.headers['content-length'] || '0', 10);
+          let receivedBytes = 0;
+
+          res.on('data', (chunk) => {
+            receivedBytes += chunk.length;
+            if (totalBytes > 0 && onProgress) {
+              const percent = Math.min(100, Math.round((receivedBytes / totalBytes) * 100));
+              onProgress(percent, receivedBytes, totalBytes);
+            }
+          });
+
+          res.pipe(file);
+
+          file.on('finish', () => {
+            file.close(() => resolve(destPath));
+          });
+          file.on('error', (err) => {
+            try { fs.unlinkSync(destPath); } catch (e) {}
+            reject(err);
+          });
+        }
+      );
+
+      req.on('error', (err) => {
+        file.close();
+        try { fs.unlinkSync(destPath); } catch (e) {}
+        reject(err);
+      });
+
+      req.on('timeout', () => {
+        req.destroy();
+        file.close();
+        try { fs.unlinkSync(destPath); } catch (e) {}
+        reject(new Error('Download timed out'));
+      });
+    }
+
+    fetchUrl(url);
+  });
+}
+
+// Helper: Extract zip file using native Windows tar or PowerShell
+function extractZip(zipPath, targetDir) {
+  return new Promise((resolve, reject) => {
+    const tarCmd = `tar -xf "${zipPath}" -C "${targetDir}"`;
+    exec(tarCmd, (err) => {
+      if (!err) {
+        return resolve();
+      }
+      const psCmd = `powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -LiteralPath '${zipPath}' -DestinationPath '${targetDir}' -Force"`;
+      exec(psCmd, (psErr) => {
+        if (!psErr) {
+          return resolve();
+        }
+        reject(new Error(`Extraction failed: ${psErr.message || err.message}`));
+      });
+    });
+  });
+}
+
+// Helper: If extracted zip created a root subfolder, flatten to targetDir
+async function normalizeExtractedFolder(targetDir) {
+  const rootExe = path.join(targetDir, 'Aura Editor.exe');
+  if (fs.existsSync(rootExe)) return targetDir;
+
+  const entries = await rawFsPromises.readdir(targetDir, { withFileTypes: true });
+  for (const entry of entries) {
+    if (entry.isDirectory()) {
+      const subDir = path.join(targetDir, entry.name);
+      const subExe = path.join(subDir, 'Aura Editor.exe');
+      if (fs.existsSync(subExe)) {
+        const subFiles = await rawFsPromises.readdir(subDir);
+        for (const f of subFiles) {
+          const from = path.join(subDir, f);
+          const to = path.join(targetDir, f);
+          await rawFsPromises.rename(from, to);
+        }
+        try { await rawFsPromises.rmdir(subDir); } catch (e) {}
+        return targetDir;
+      }
+    }
+  }
+  return targetDir;
+}
+
 // Helper: recursively collect all files in a directory
 async function getFilesRecursively(dir) {
   const entries = await rawFsPromises.readdir(dir, { withFileTypes: true });
@@ -133,47 +332,65 @@ ipcMain.handle('installer:startInstall', async (event, options) => {
     sendProgress(5, 'Preparing destination directory...', targetDir);
     await rawFsPromises.mkdir(targetDir, { recursive: true });
 
-    // Locate source payload
-    // In production bundled package: process.resourcesPath + /app-payload or __dirname + /payload
-    // In local dev/build: installer-out/win-unpacked
-    let sourceDir = app.isPackaged
+    // Check if offline/local payload exists (development/fallback)
+    let localSourceDir = app.isPackaged
       ? path.join(process.resourcesPath, 'app-payload')
       : path.resolve(__dirname, '../installer-out/win-unpacked');
 
-    if (!fs.existsSync(sourceDir)) {
-      sourceDir = path.join(process.resourcesPath, 'app-payload');
-    }
-    if (!fs.existsSync(sourceDir)) {
-      sourceDir = path.resolve(__dirname, '../installer-out/win-unpacked');
-    }
-    if (!fs.existsSync(sourceDir)) {
-      sourceDir = path.join(__dirname, 'payload');
+    if (!fs.existsSync(localSourceDir)) {
+      localSourceDir = path.join(__dirname, 'payload');
     }
 
-    if (!fs.existsSync(sourceDir)) {
-      throw new Error(`Application package payload not found at: ${sourceDir}`);
-    }
+    if (fs.existsSync(localSourceDir)) {
+      sendProgress(12, 'Scanning local application payload...');
+      const allFiles = await getFilesRecursively(localSourceDir);
+      const totalFiles = allFiles.length;
 
-    sendProgress(12, 'Scanning application files...');
-    const allFiles = await getFilesRecursively(sourceDir);
-    const totalFiles = allFiles.length;
+      sendProgress(15, 'Extracting Aura Editor core engine...');
+      let copiedCount = 0;
+      for (const srcFile of allFiles) {
+        const relPath = path.relative(localSourceDir, srcFile);
+        const destFile = path.join(targetDir, relPath);
+        const destFileDir = path.dirname(destFile);
 
-    sendProgress(15, 'Extracting Aura Editor core engine...');
+        await rawFsPromises.mkdir(destFileDir, { recursive: true });
+        await rawFsPromises.copyFile(srcFile, destFile);
 
-    let copiedCount = 0;
-    for (const srcFile of allFiles) {
-      const relPath = path.relative(sourceDir, srcFile);
-      const destFile = path.join(targetDir, relPath);
-      const destFileDir = path.dirname(destFile);
-
-      await rawFsPromises.mkdir(destFileDir, { recursive: true });
-      await rawFsPromises.copyFile(srcFile, destFile);
-
-      copiedCount++;
-      const pct = Math.round(15 + (copiedCount / totalFiles) * 65);
-      if (copiedCount % 10 === 0 || copiedCount === totalFiles) {
-        sendProgress(pct, 'Extracting application components...', relPath);
+        copiedCount++;
+        const pct = Math.round(15 + (copiedCount / totalFiles) * 65);
+        if (copiedCount % 10 === 0 || copiedCount === totalFiles) {
+          sendProgress(pct, 'Extracting application components...', relPath);
+        }
       }
+    } else {
+      // Standalone Online Installer: Fetch and download directly from GitHub Releases
+      const repo = getRepoName();
+      sendProgress(10, 'Connecting to GitHub Releases...', `Checking latest release on ${repo}`);
+
+      const releaseAsset = await getLatestReleaseAsset(repo);
+      const tempZipPath = path.join(app.getPath('temp'), `aura-release-${Date.now()}.zip`);
+
+      const mbTotal = (releaseAsset.size / (1024 * 1024)).toFixed(1);
+      sendProgress(15, `Downloading Aura Editor (${releaseAsset.version})...`, `${releaseAsset.name} (~${mbTotal} MB)`);
+
+      await downloadFile(releaseAsset.downloadUrl, tempZipPath, (dlPercent, received, total) => {
+        const overallPct = Math.round(15 + (dlPercent / 100) * 60);
+        const mbReceived = (received / (1024 * 1024)).toFixed(1);
+        sendProgress(
+          overallPct,
+          `Downloading Aura Editor ${releaseAsset.version} (${mbReceived} MB / ${mbTotal} MB)...`,
+          `${dlPercent}% complete`
+        );
+      });
+
+      sendProgress(76, 'Extracting application components...', 'Unpacking release archive...');
+      await extractZip(tempZipPath, targetDir);
+
+      try {
+        fs.unlinkSync(tempZipPath);
+      } catch (e) {}
+
+      await normalizeExtractedFolder(targetDir);
     }
 
     const exePath = path.join(targetDir, 'Aura Editor.exe');
