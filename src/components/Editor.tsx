@@ -14,6 +14,7 @@ import { createTypewriterPlugin } from '../editor/TypewriterPlugin';
 import { createSyntaxHighlighting } from '../editor/SyntaxHighlighting';
 import { createEditorKeybindings } from '../editor/Keymaps';
 import { createWordTriggerPlugin } from '../editor/WordTriggerPlugin';
+import { createTablePlugin } from '../editor/TablePlugin';
 import { createFocusModePlugin } from '../editor/FocusPlugin';
 import { AudioService } from '../services/AudioService';
 import { assetManager } from '../services/AssetManagerService';
@@ -236,6 +237,7 @@ export const Editor = forwardRef<EditorHandle, EditorProps>(
         createTypewriterPlugin(settings.typewriterMode),
         createFocusModePlugin(settings.focusMode),
         createWordTriggerPlugin(() => settings.wordTriggers || []),
+        createTablePlugin(),
         createSyntaxHighlighting(settings.theme),
         createEditorTheme(settings),
         highlightSelectionMatches(),

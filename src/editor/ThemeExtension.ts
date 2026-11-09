@@ -296,25 +296,49 @@ export function createEditorTheme(settings: EditorSettings): Extension {
       '.cm-callout-single': {
         borderRadius: '0 8px 8px 0',
       },
-      '.cm-callout-note': {
-        borderLeftColor: '#3B82F6',
-        backgroundColor: 'rgba(59, 130, 246, 0.07)',
+      '.cm-callout-note, .cm-callout-info': {
+        borderLeftColor: 'var(--border-accent, rgba(140, 160, 190, 0.5))',
+        backgroundColor: 'rgba(140, 160, 190, 0.035)',
       },
-      '.cm-callout-tip': {
-        borderLeftColor: '#10B981',
-        backgroundColor: 'rgba(16, 185, 129, 0.07)',
+      '.cm-callout-tip, .cm-callout-hint': {
+        borderLeftColor: 'var(--border-accent, rgba(130, 180, 150, 0.5))',
+        backgroundColor: 'rgba(130, 180, 150, 0.035)',
       },
       '.cm-callout-important': {
-        borderLeftColor: '#8B5CF6',
-        backgroundColor: 'rgba(139, 92, 246, 0.07)',
+        borderLeftColor: 'var(--border-accent, rgba(170, 150, 200, 0.5))',
+        backgroundColor: 'rgba(170, 150, 200, 0.035)',
       },
       '.cm-callout-warning': {
-        borderLeftColor: '#F59E0B',
-        backgroundColor: 'rgba(245, 158, 11, 0.07)',
+        borderLeftColor: 'var(--border-accent, rgba(200, 160, 120, 0.5))',
+        backgroundColor: 'rgba(200, 160, 120, 0.035)',
       },
-      '.cm-callout-caution': {
-        borderLeftColor: '#EF4444',
-        backgroundColor: 'rgba(239, 68, 68, 0.07)',
+      '.cm-callout-caution, .cm-callout-danger, .cm-callout-critical': {
+        borderLeftColor: 'var(--border-accent, rgba(200, 120, 120, 0.5))',
+        backgroundColor: 'rgba(200, 120, 120, 0.035)',
+      },
+      '.cm-callout-quote, .cm-callout-cite': {
+        borderLeftColor: 'var(--border-color, rgba(150, 150, 150, 0.4))',
+        backgroundColor: 'rgba(125, 125, 125, 0.03)',
+      },
+      '.cm-callout-summary, .cm-callout-abstract, .cm-callout-tldr': {
+        borderLeftColor: 'var(--border-accent, rgba(150, 170, 180, 0.5))',
+        backgroundColor: 'rgba(150, 170, 180, 0.035)',
+      },
+      '.cm-callout-success, .cm-callout-done, .cm-callout-check': {
+        borderLeftColor: 'var(--border-accent, rgba(130, 180, 150, 0.5))',
+        backgroundColor: 'rgba(130, 180, 150, 0.035)',
+      },
+      '.cm-callout-question, .cm-callout-faq, .cm-callout-help': {
+        borderLeftColor: 'var(--border-accent, rgba(160, 160, 190, 0.5))',
+        backgroundColor: 'rgba(160, 160, 190, 0.035)',
+      },
+      '.cm-callout-bug': {
+        borderLeftColor: 'var(--border-accent, rgba(200, 130, 130, 0.5))',
+        backgroundColor: 'rgba(200, 130, 130, 0.035)',
+      },
+      '.cm-callout-example': {
+        borderLeftColor: 'var(--border-accent, rgba(160, 160, 160, 0.5))',
+        backgroundColor: 'rgba(125, 125, 125, 0.035)',
       },
 
       // Unified Code Block Lines

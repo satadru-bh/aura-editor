@@ -270,20 +270,20 @@ function buildLiveMarkdownDecorations(state: EditorState): DecorationSet {
         const startL = doc.lineAt(nodeFrom).number;
         const endL = doc.lineAt(nodeTo).number;
         const firstLine = doc.line(startL);
-        const calloutMatch = firstLine.text.match(/^>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/i);
+        const calloutMatch = firstLine.text.match(/^>\s*\[!([A-Za-z0-9_-]+)\](?:\s+(.*))?/i);
 
         let calloutType = '';
         if (calloutMatch) {
           calloutType = calloutMatch[1].toUpperCase();
+          const customTitle = calloutMatch[2]?.trim() || undefined;
 
           if (!isLineActive(startL)) {
-            const matchLen = calloutMatch[0].length;
             const cFrom = firstLine.from;
-            const cTo = Math.min(firstLine.to, firstLine.from + matchLen);
+            const cTo = customTitle ? firstLine.to : Math.min(firstLine.to, firstLine.from + calloutMatch[0].length);
             if (cFrom < cTo) {
               ranges.push(
                 Decoration.replace({
-                  widget: new CalloutHeaderWidget(calloutType),
+                  widget: new CalloutHeaderWidget(calloutType, customTitle),
                 }).range(cFrom, cTo)
               );
             }
