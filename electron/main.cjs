@@ -437,7 +437,7 @@ ipcMain.handle('app:checkForUpdates', async () => {
           currentVersion,
           latestVersion,
           hasUpdate,
-          releaseUrl: `https://github.com/satadru/aura-editor/releases/tag/v${latestVersion}`,
+          releaseUrl: `https://github.com/satadru-bh/aura-editor/releases/tag/v${latestVersion}`,
           notes: typeof result.updateInfo.releaseNotes === 'string' ? result.updateInfo.releaseNotes : '',
         };
       }
@@ -451,7 +451,7 @@ ipcMain.handle('app:checkForUpdates', async () => {
     return new Promise((resolve) => {
       const currentVersion = app.getVersion();
       const req = https.get(
-        'https://api.github.com/repos/satadru/aura-editor/releases/latest',
+        'https://api.github.com/repos/satadru-bh/aura-editor/releases/latest',
         {
           headers: {
             'User-Agent': `AuraEditor/${currentVersion}`,
@@ -472,7 +472,7 @@ ipcMain.handle('app:checkForUpdates', async () => {
                   currentVersion,
                   latestVersion: latestTag,
                   hasUpdate,
-                  releaseUrl: release.html_url || 'https://github.com/satadru/aura-editor/releases',
+                  releaseUrl: release.html_url || 'https://github.com/satadru-bh/aura-editor/releases',
                   notes: release.body || '',
                 });
               } else {

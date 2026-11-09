@@ -7,7 +7,7 @@
   "author": "Aura Team",
   "repository": {
     "type": "git",
-    "url": "https://github.com/satadru/aura-editor.git"
+    "url": "https://github.com/satadru-bh/aura-editor.git"
   },
   "main": "electron/main.cjs",
   "scripts": {
@@ -76,7 +76,7 @@
     "productName": "Aura Editor",
     "publish": {
       "provider": "github",
-      "owner": "satadru",
+      "owner": "satadru-bh",
       "repo": "aura-editor"
     },
     "directories": {

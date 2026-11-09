@@ -86,7 +86,7 @@ function getRepoName() {
       }
     }
   } catch (e) {}
-  return 'satadru/aura-editor';
+  return 'satadru-bh/aura-editor';
 }
 
 // Helper: Fetch latest release asset info from GitHub Releases
